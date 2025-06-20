@@ -3,16 +3,16 @@ package main
 import (
 	"board/internal/api"
 	"board/internal/pagerenderer"
-	"board/internal/postsrepo"
+	"board/internal/repo"
 	"net/http"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
 func main() {
-	pr_cfg := postsrepo.PostsRepoConfig{}
+	pr_cfg := repo.RepoConfig{}
 	cleanenv.ReadConfig("config.env", &pr_cfg)
-	pr, err := postsrepo.NewPostsRepo(pr_cfg)
+	pr, err := repo.NewPostsRepo(pr_cfg)
 	if err != nil {
 		panic(err)
 	}

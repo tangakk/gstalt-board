@@ -11,3 +11,9 @@ type Post struct {
 	ParentId  int64
 	Board     string
 }
+
+type User struct {
+	Name  string
+	Pass  string
+	Admin bool
+}

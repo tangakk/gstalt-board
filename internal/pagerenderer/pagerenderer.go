@@ -2,7 +2,7 @@ package pagerenderer
 
 import (
 	"board/internal/models"
-	"board/internal/postsrepo"
+	"board/internal/repo"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -24,11 +24,11 @@ const (
 )
 
 type PageRenderer struct {
-	PostsRepo *postsrepo.PostsRepo
+	PostsRepo *repo.Repo
 	Router    *chi.Mux
 }
 
-func NewPageRenderer(pr *postsrepo.PostsRepo) *PageRenderer {
+func NewPageRenderer(pr *repo.Repo) *PageRenderer {
 	r := chi.NewRouter()
 
 	a := &PageRenderer{Router: r, PostsRepo: pr}

@@ -46,7 +46,13 @@
             Автор: {{ .Author }}; #{{ .Id  }}<br>
             {{ .Timestamp }}
             </div>
-            <a href="{{.Board}}-0-10" style="float: right;">К доске {{.Board}}</a>
+            <div style="float: right;">
+            {{ if .ParentId }}
+            Ответ на <a href="/post/{{.ParentId}}-0-10">{{.ParentId}}</a>
+            {{ else }}
+            <a href="{{.Board}}-0-10">{{.Board}}</a>
+            {{ end }}
+            </div>
             <br>
             <br>
             <p>{{ .Text }}</p>

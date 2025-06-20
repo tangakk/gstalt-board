@@ -1,4 +1,4 @@
-package postsrepo
+package repo
 
 import (
 	"board/internal/models"
@@ -31,7 +31,7 @@ const (
 const LOGFILE_NAME = "postsrepo.log"
 
 // конфиг репозитория
-type PostsRepoConfig struct {
+type RepoConfig struct {
 	UserName string `env:"POSTGRES_USER" env-default:"root"`
 	Password string `env:"POSTGRES_PASSWORD" env-default:"123"`
 	Host     string `env:"POSTGRES_HOST" env-default:"localhost"`
@@ -41,13 +41,13 @@ type PostsRepoConfig struct {
 	MaxPostsSelect int `env:"MAX_POSTS" env-default:"100"`
 }
 
-type PostsRepo struct {
+type Repo struct {
 	db     *sqlx.DB
 	logger *log.Logger
-	PostsRepoConfig
+	RepoConfig
 }
 
-func NewPostsRepo(c PostsRepoConfig) (*PostsRepo, error) {
+func NewPostsRepo(c RepoConfig) (*Repo, error) {
 	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s port=%s",
 		c.UserName, c.Password, c.DbName, c.Host, c.Port)
 	db, err := sqlx.Connect("postgres", dsn)
@@ -62,10 +62,10 @@ func NewPostsRepo(c PostsRepoConfig) (*PostsRepo, error) {
 		log.Fatal("Failed to open log file:", err)
 	}
 	logger := log.New(logfile, "", log.Ldate|log.Ltime|log.Lshortfile)
-	return &PostsRepo{db: db, logger: logger, PostsRepoConfig: c}, nil
+	return &Repo{db: db, logger: logger, RepoConfig: c}, nil
 }
 
-func (pr *PostsRepo) CreatePost(post models.Post) error {
+func (pr *Repo) CreatePost(post models.Post) error {
 	_, err := sq.Insert(POSTS_TABLE).
 		Columns(AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
 		Values(post.Author, post.Text, post.Timestamp, post.Data, post.ParentId, post.Board).
@@ -74,7 +74,7 @@ func (pr *PostsRepo) CreatePost(post models.Post) error {
 	return err
 }
 
-func (pr *PostsRepo) GetNPostsFromBoard(n int, offset int, board string, reversed bool) ([]models.Post, error) {
+func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed bool) ([]models.Post, error) {
 	if n <= 0 {
 		return nil, fmt.Errorf("n should be positive")
 	}
@@ -108,7 +108,7 @@ func (pr *PostsRepo) GetNPostsFromBoard(n int, offset int, board string, reverse
 	return posts, nil
 }
 
-func (pr *PostsRepo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([]models.Post, error) {
+func (pr *Repo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([]models.Post, error) {
 	t := ""
 	if reversed {
 		t = " DESC"
@@ -136,7 +136,7 @@ func (pr *PostsRepo) GetResponsesForPost(op int, offset int, n int, reversed boo
 	return posts, nil
 }
 
-func (pr *PostsRepo) GetPost(id int64) (models.Post, error) {
+func (pr *Repo) GetPost(id int64) (models.Post, error) {
 	post := models.Post{}
 	err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
 		From(POSTS_TABLE).
