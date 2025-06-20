@@ -5,33 +5,46 @@
         <title>{{ .Board }} - Гештальт</title>
     </head>
     <body>
-        <h1>{{ .Board }}</h1>
+		<div class="center"><h1>{{ .Board }}</h1></div>
         <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
         target="result">
-            <label for="author">Автор</label>
-            <input type="text" id="author" name="Author">
+			<div>
+				<label for="author">Автор</label>
+				<input type="text" id="author" name="Author">
+			</div>
+			
+			<div>
+				<label for="text">Текст</label>
+				<textarea id="text" name="Text"></textarea>
+			</div>
 
-            <label for="text">Текст</label>
-            <textarea id="text" name="Text"></textarea>
+			<div>
+				<label for="data">Картинка</label>
+				<input type="file" name="Data" id="data" accept="image/jpeg">
+			</div>
 
-            <label for="data">Картинка</label>
-            <input type="file" name="Data" id="data" accept="image/jpeg">
-
-            <input type="hidden" name="Board" value="{{ .Board }}">
-            <button type="submit">Отправить</button>
+			<div>
+				<input type="hidden" name="Board" value="{{ .Board }}">
+				<button type="submit">Отправить</button>
+			</div>
         </form>
         <iframe name="result"></iframe>
         {{ range .Posts }}
-        <div style="border-width: 2px; border-style: solid;">
+        <div>
             Автор: {{ .Author }}; #{{ .Id  }}<br>
             {{ .Timestamp }}
             <br>
             <p>{{ .Text }}</p>
             {{ if .Data }}
-            <img src="data:image/jpeg;base64, {{ .Data }}"
-            style="max-width: 200px;">
+            <img src="data:image/jpeg;base64, {{ .Data }}">
             {{ end }}
         </div>
         {{ end }}
     </body>
+	<style>
+	div.center {
+		display: flex;
+		justify-content: center;
+	}
+	</style>
 </html>
