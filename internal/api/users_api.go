@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/schema"
 )
 
-const secret_key = "да иди нахуй, ты вообще не должен был это читать"
+var secret_key = []byte("да иди нахуй, ты вообще не должен был это читать")
 
 const TOKEN_VALID_TIME = 24 //сколько валиден токен в часах
 
@@ -88,7 +88,7 @@ func (a *Api) Login(w http.ResponseWriter, r *http.Request) {
 		"exp":  time.Now().Add(time.Hour * TOKEN_VALID_TIME).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(secret_key))
+	tokenString, err := token.SignedString(secret_key)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -130,7 +130,7 @@ func (a *Api) ValidateUser(next http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 			} else {
 				claims := token.Claims.(jwt.MapClaims)
-				ctx := context.WithValue(r.Context(), "user", claims["name"])
+				ctx := context.WithValue(r.Context(), "user_name", claims["name"])
 				next.ServeHTTP(w, r.WithContext(ctx))
 			}
 		} else {

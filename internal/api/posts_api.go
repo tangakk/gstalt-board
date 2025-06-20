@@ -101,7 +101,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Установлена доска " + op.Board + "\n"))
 	}
 
-	if name, ok := r.Context().Value("name").(string); ok {
+	if name, ok := r.Context().Value("user_name").(string); ok {
 		post.Author = name
 	} else {
 		_, err = a.Repo.GetUser(post.Author)
