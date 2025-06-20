@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{{ .Board }} - Гештальт</title>
+    </head>
+    <body>
+        <h1>{{ .Board }}</h1>
+        <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
+        target="result">
+            <label for="author">Автор</label>
+            <input type="text" id="author" name="Author">
+
+            <label for="text">Текст</label>
+            <textarea id="text" name="Text"></textarea>
+
+            <label for="data">Картинка</label>
+            <input type="file" name="Data" id="data" accept="image/jpeg">
+
+            <input type="hidden" name="Board" value="{{ .Board }}">
+            <button type="submit">Отправить</button>
+        </form>
+        <iframe name="result"></iframe>
+        {{ range .Posts }}
+        <div style="border-width: 2px; border-style: solid;">
+            Автор: {{ .Author }}; #{{ .Id  }}<br>
+            {{ .Timestamp }}
+            <br>
+            <p>{{ .Text }}</p>
+            {{ if .Data }}
+            <img src="data:image/jpeg;base64, {{ .Data }}"
+            style="max-width: 200px;">
+            {{ end }}
+        </div>
+        {{ end }}
+    </body>
+</html>
