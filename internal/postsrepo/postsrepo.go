@@ -37,11 +37,14 @@ type PostsRepoConfig struct {
 	Host     string `env:"POSTGRES_HOST" env-default:"localhost"`
 	Port     string `env:"POSTGRES_PORT" env-default:"5432"`
 	DbName   string `env:"POSTGRES_DB" env-default:"db"`
+
+	MaxPostsSelect int `env:"MAX_POSTS" env-default:"100"`
 }
 
 type PostsRepo struct {
 	db     *sqlx.DB
 	logger *log.Logger
+	PostsRepoConfig
 }
 
 func NewPostsRepo(c PostsRepoConfig) (*PostsRepo, error) {
@@ -59,7 +62,7 @@ func NewPostsRepo(c PostsRepoConfig) (*PostsRepo, error) {
 		log.Fatal("Failed to open log file:", err)
 	}
 	logger := log.New(logfile, "", log.Ldate|log.Ltime|log.Lshortfile)
-	return &PostsRepo{db: db, logger: logger}, nil
+	return &PostsRepo{db: db, logger: logger, PostsRepoConfig: c}, nil
 }
 
 func (pr *PostsRepo) CreatePost(post models.Post) error {
@@ -71,19 +74,26 @@ func (pr *PostsRepo) CreatePost(post models.Post) error {
 	return err
 }
 
-func (pr *PostsRepo) GetNPostsFromBoard(n int, offset int, board string) ([]models.Post, error) {
+func (pr *PostsRepo) GetNPostsFromBoard(n int, offset int, board string, reversed bool) ([]models.Post, error) {
 	if n <= 0 {
 		return nil, fmt.Errorf("n should be positive")
 	}
 	if offset < 0 {
 		return nil, fmt.Errorf("offset should be non-negative")
 	}
+	t := ""
+	if reversed {
+		t = " DESC"
+	} else {
+		t = " ASC"
+	}
+	n = min(n, pr.MaxPostsSelect)
 	rows, err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
 		From(POSTS_TABLE).
 		Where(sq.Eq{PARENT: 0, BOARD: board}).
 		Offset(uint64(offset)).
 		Limit(uint64(n)).
-		OrderBy(ID + " DESC").
+		OrderBy(ID + t).
 		PlaceholderFormat(sq.Dollar).
 		RunWith(pr.db).Query()
 	if err != nil {
@@ -96,6 +106,48 @@ func (pr *PostsRepo) GetNPostsFromBoard(n int, offset int, board string) ([]mode
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+func (pr *PostsRepo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([]models.Post, error) {
+	t := ""
+	if reversed {
+		t = " DESC"
+	} else {
+		t = " ASC"
+	}
+	n = min(n, pr.MaxPostsSelect)
+	rows, err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+		From(POSTS_TABLE).
+		Where(sq.Eq{PARENT: op}).
+		Offset(uint64(offset)).
+		Limit(uint64(n)).
+		OrderBy(ID + t).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pr.db).Query()
+	if err != nil {
+		return nil, err
+	}
+	posts := make([]models.Post, 0)
+	for rows.Next() {
+		var post models.Post
+		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board)
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (pr *PostsRepo) GetPost(id int64) (models.Post, error) {
+	post := models.Post{}
+	err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+		From(POSTS_TABLE).
+		Where(sq.Eq{ID: id}).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pr.db).QueryRow().Scan(
+		&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board)
+	if err != nil {
+		return models.Post{}, err
+	}
+	return post, nil
 }
 
 /*

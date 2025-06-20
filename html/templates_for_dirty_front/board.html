@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{{ .Board }} - Гештальт</title>
+    </head>
+    <body>
+        <h1>{{ .Board }}</h1>
+        {{template "send_form" .}}
+        {{template "posts_list" .}}
+    </body>
+</html>

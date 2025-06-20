@@ -30,6 +30,8 @@ func NewApi(pr *postsrepo.PostsRepo) *Api {
 
 	r.Post("/create", a.CreatePost)
 	r.Get("/{board}/get-{offset}-{n}", a.GetNPosts)
+	r.Get("/get-{id}", a.GetPost)
+	r.Get("/get-responses-{id}-{offset}-{n}", a.GetResponses)
 
 	return a
 }
@@ -72,6 +74,16 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 		post.Data = base64.StdEncoding.EncodeToString(data)
 	}
+	if post.ParentId != 0 {
+		op, err := a.PostsRepo.GetPost(post.ParentId)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		post.Board = op.Board
+		w.Write([]byte("Установлена доска " + op.Board + "\n"))
+	}
 	err = a.PostsRepo.CreatePost(post)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -95,7 +107,63 @@ func (a *Api) GetNPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	board := "/" + chi.URLParam(r, "board")
-	posts, err := a.PostsRepo.GetNPostsFromBoard(n, offset, board)
+	posts, err := a.PostsRepo.GetNPostsFromBoard(n, offset, board, true)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	resultJson, err := json.Marshal(posts)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(resultJson)
+}
+
+func (a *Api) GetPost(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	post, err := a.PostsRepo.GetPost(int64(id))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	resultJson, err := json.Marshal(post)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(resultJson)
+}
+
+func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
+	offset, err := strconv.Atoi(chi.URLParam(r, "offset"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	n, err := strconv.Atoi(chi.URLParam(r, "n"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	posts, err := a.PostsRepo.GetResponsesForPost(id, offset, n, false)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
