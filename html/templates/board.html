@@ -5,46 +5,76 @@
         <title>{{ .Board }} - Гештальт</title>
     </head>
     <body>
-		<div class="center"><h1>{{ .Board }}</h1></div>
-        <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
-        target="result">
-			<div>
-				<label for="author">Автор</label>
-				<input type="text" id="author" name="Author">
+		<div>
+			<div class="center"><h1>{{ .Board }}</h1></div>
+			<div class="result">
+				{{ range .Posts }}
+				<div>
+					Автор: {{ .Author }}; #{{ .Id  }}<br>
+					{{ .Timestamp }}
+					<br>
+					<p>{{ .Text }}</p>
+					{{ if .Data }}
+					<img src="data:image/jpeg;base64, {{ .Data }}">
+					{{ end }}
+				</div>
+				{{ end }}
 			</div>
-			
-			<div>
-				<label for="text">Текст</label>
-				<textarea id="text" name="Text"></textarea>
-			</div>
-
-			<div>
-				<label for="data">Картинка</label>
-				<input type="file" name="Data" id="data" accept="image/jpeg">
-			</div>
-
-			<div>
-				<input type="hidden" name="Board" value="{{ .Board }}">
-				<button type="submit">Отправить</button>
-			</div>
-        </form>
-        <iframe name="result"></iframe>
-        {{ range .Posts }}
-        <div>
-            Автор: {{ .Author }}; #{{ .Id  }}<br>
-            {{ .Timestamp }}
-            <br>
-            <p>{{ .Text }}</p>
-            {{ if .Data }}
-            <img src="data:image/jpeg;base64, {{ .Data }}">
-            {{ end }}
-        </div>
-        {{ end }}
+			<form class="input" action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
+			target="result">
+				<div>
+					<label for="author">Автор</label>
+					<input type="text" id="author" name="Author">
+				</div>
+				<div class="grow-4">
+					<label for="text">Текст</label>
+					<textarea id="text" name="Text"></textarea>
+					<label for="data">Картинка</label>
+					<input type="file" name="Data" id="data" accept="image/jpeg">
+				</div>
+				<div>
+					<input type="hidden" name="Board" value="{{ .Board }}">
+					<button type="submit">Отправить</button>
+				</div>
+			</form>
+		</div>
     </body>
 	<style>
+	body {
+		width: 1000px;
+		height: 100vh;
+		margin: auto;
+	}
+	body > div {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+	body > div > * {
+		margin: 40px;
+	}
 	div.center {
 		display: flex;
 		justify-content: center;
+	}
+	.result {
+		display: flex;
+		flex-direction: column-reverse;
+		flex-grow: 1;
+		overflow-y: scroll;
+		margin: 0;
+	}
+	.input {
+	}
+	.input > div {
+		display: flex;
+		flex-direction: column;
+	}
+	.input > .grow-4 {
+		flex-grow: 4;
+	}
+	h1 {
+		margin: 0;
 	}
 	</style>
 </html>
