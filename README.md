@@ -15,7 +15,7 @@ Parentid = Айди поста-родителя
 Board = /имя-доски
 ```
 ### /get-{id} GET
-JSON с постом с соответствующим id
+JSON с постом с соответствующим id. В Data будет base64 строка.
 ### /{board}/get-{offset}-{n} GET
 JSON с {n} последних постов на доске /{board}, начиная с {offset}. Только посты с ParentId=0
 ### /get-responses-{id}-{offset}-{n} GET
