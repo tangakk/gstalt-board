@@ -18,6 +18,8 @@ const secret_key = "да иди нахуй, ты вообще не должен 
 
 const TOKEN_VALID_TIME = 24 //сколько валиден токен в часах
 
+var ErrCantBeAnon = fmt.Errorf("нельзя быть аноном")
+
 func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := r.ParseForm()
@@ -30,6 +32,11 @@ func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
+		return
+	}
+	if user.Name == ANON {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrBadMan.Error()))
 		return
 	}
 	user.Admin = false

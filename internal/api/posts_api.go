@@ -17,6 +17,7 @@ import (
 
 const (
 	MAX_MULTIPART_SIZE = 10485760
+	ANON               = "Аноним"
 )
 
 type Api struct {
@@ -67,7 +68,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if post.Author == "" {
-		post.Author = "Аноним"
+		post.Author = ANON
 	}
 	if len(r.MultipartForm.File) != 0 {
 		if _, ok := r.MultipartForm.File["Data"]; !ok {
