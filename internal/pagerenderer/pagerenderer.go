@@ -3,7 +3,10 @@ package pagerenderer
 import (
 	"board/internal/models"
 	"board/internal/repo"
+	"encoding/json"
+	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -54,7 +57,27 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 	}
 	board := "/" + chi.URLParam(r, "board")
 
-	posts, err := pr.PostsRepo.GetNPostsFromBoard(n, offset, board, true)
+	rt, err := http.Get(API + fmt.Sprintf("%v/get-%v-%v", board, offset, n))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	if rt.StatusCode != http.StatusOK {
+		w.WriteHeader(rt.StatusCode)
+		w.Write([]byte(rt.Status))
+		return
+	}
+
+	var posts []models.Post = make([]models.Post, 0)
+	data, err := io.ReadAll(rt.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	err = json.Unmarshal(data, &posts)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -107,14 +130,54 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op, err := pr.PostsRepo.GetPost(int64(id))
+	rt, err := http.Get(API + fmt.Sprintf("/get-%v", id))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	posts, err := pr.PostsRepo.GetResponsesForPost(id, offset, n, false)
+	if rt.StatusCode != http.StatusOK {
+		w.WriteHeader(rt.StatusCode)
+		w.Write([]byte(rt.Status))
+		return
+	}
+
+	var op models.Post
+	data, err := io.ReadAll(rt.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	err = json.Unmarshal(data, &op)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	rt, err = http.Get(API + fmt.Sprintf("/get-responses-%v-%v-%v", id, offset, n))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	if rt.StatusCode != http.StatusOK {
+		w.WriteHeader(rt.StatusCode)
+		w.Write([]byte(rt.Status))
+		return
+	}
+
+	var posts []models.Post = make([]models.Post, 0)
+	data, err = io.ReadAll(rt.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	err = json.Unmarshal(data, &posts)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

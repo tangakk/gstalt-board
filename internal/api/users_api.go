@@ -130,8 +130,18 @@ func (a *Api) ValidateUser(next http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 			} else {
 				claims := token.Claims.(jwt.MapClaims)
-				ctx := context.WithValue(r.Context(), "user_name", claims["name"])
-				next.ServeHTTP(w, r.WithContext(ctx))
+				name, ok := claims["name"].(string)
+				if !ok {
+					next.ServeHTTP(w, r)
+				} else {
+					user, err := a.Repo.GetUser(name)
+					if err != nil {
+						next.ServeHTTP(w, r)
+					} else {
+						ctx := context.WithValue(r.Context(), "user", user)
+						next.ServeHTTP(w, r.WithContext(ctx))
+					}
+				}
 			}
 		} else {
 			next.ServeHTTP(w, r)

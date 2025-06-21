@@ -13,3 +13,12 @@ CREATE TABLE IF NOT EXISTS posts (
     parentId INTEGER, 
     board TEXT
 );
+
+CREATE TABLE IF NOT EXISTS boards (
+    name TEXT PRIMARY KEY,
+    description TEXT,
+    admins TEXT[],
+    mode INT,
+    usersList TEXT[],
+    owner TEXT
+);
