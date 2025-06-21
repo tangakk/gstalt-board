@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -45,7 +46,7 @@ func NewApi(pr *repo.Repo) *Api {
 	r.Post("/create-board", a.CreateBoard)
 	r.Get("/get-boards", a.GetAllBoards)
 	r.Get("/{board}/get-board", a.GetBoard)
-	r.Post("/{board}/update-board", a.UpdateBoard)
+	r.Post("/update-board", a.UpdateBoard)
 
 	return a
 }
@@ -78,6 +79,12 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	if post.Author == "" {
 		post.Author = ANON
+	}
+	post.Author = post.Author[:MAX_NAME_LEN]
+	if strings.Contains(post.Author, ",") {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrForbiddenChars.Error()))
+		return
 	}
 	if len(r.MultipartForm.File) != 0 {
 		if _, ok := r.MultipartForm.File["Data"]; !ok {

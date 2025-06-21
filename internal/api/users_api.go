@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -17,8 +18,10 @@ import (
 var secret_key = []byte("да иди нахуй, ты вообще не должен был это читать")
 
 const TOKEN_VALID_TIME = 24 //сколько валиден токен в часах
+const MAX_NAME_LEN = 20     //максимальная длина имени
 
 var ErrCantBeAnon = fmt.Errorf("нельзя быть аноном")
+var ErrForbiddenChars = fmt.Errorf("уберите запятую")
 
 func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
@@ -37,6 +40,12 @@ func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if user.Name == ANON {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(ErrBadMan.Error()))
+		return
+	}
+	user.Name = user.Name[:MAX_NAME_LEN]
+	if strings.Contains(user.Name, ",") {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrForbiddenChars.Error()))
 		return
 	}
 	user.Admin = false

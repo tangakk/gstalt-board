@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 )
 
 var ErrNotAdmin = fmt.Errorf("только для админов")
+var ErrInvalidBoardName = fmt.Errorf("/onlylatinand0123456789inboardname")
 
 func (a *Api) CreateBoard(w http.ResponseWriter, r *http.Request) {
 	var board models.Board
@@ -39,6 +41,11 @@ func (a *Api) CreateBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	board.Owner = user.Name
+	if !validBoardName(board.Name) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(ErrInvalidBoardName.Error()))
+		return
+	}
 	err = a.Repo.CreateBoard(board)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -136,4 +143,8 @@ func (a *Api) UpdateBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("Ok"))
+}
+
+func validBoardName(str string) bool {
+	return regexp.MustCompile("^\\/[a-z0-9]+$").MatchString(str)
 }
