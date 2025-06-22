@@ -80,7 +80,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 	if post.Author == "" {
 		post.Author = ANON
 	}
-	post.Author = post.Author[:MAX_NAME_LEN]
+	post.Author = post.Author[:min(MAX_NAME_LEN, len(post.Author))]
 	if strings.Contains(post.Author, ",") {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(ErrForbiddenChars.Error()))

@@ -5,6 +5,8 @@
         <title>{{ .Board }} - Гештальт</title>
     </head>
     <body>
+        <a href="/">На главную</a>
+        {{template "auth" .}}
         <h1>{{ .Board }}</h1>
         {{template "send_form" .}}
         {{template "posts_list" .}}

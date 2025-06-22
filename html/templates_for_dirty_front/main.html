@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>ГештальтБорда!</title>
+    </head>
+    <body>
+        {{template "auth" .}}
+        <h1>Cписок борд:</h1>
+        {{range .Boards}}
+        <a href="{{.Name}}-0-10"><b>{{.Name}}</b></a> - {{.Description}}<br><br>
+        {{end}}
+    </body>
+</html>

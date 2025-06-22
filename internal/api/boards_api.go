@@ -69,7 +69,7 @@ func (a *Api) GetAllBoards(w http.ResponseWriter, r *http.Request) {
 			boards[i].UsersList = []string{}
 		}
 	}
-	resultJson, err := json.Marshal(map[string]any{"Boards": boards})
+	resultJson, err := json.Marshal(boards)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -146,5 +146,5 @@ func (a *Api) UpdateBoard(w http.ResponseWriter, r *http.Request) {
 }
 
 func validBoardName(str string) bool {
-	return regexp.MustCompile("^\\/[a-z0-9]+$").MatchString(str)
+	return regexp.MustCompile(`^\/[a-z0-9]+$`).MatchString(str)
 }

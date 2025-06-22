@@ -42,7 +42,7 @@ func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ErrBadMan.Error()))
 		return
 	}
-	user.Name = user.Name[:MAX_NAME_LEN]
+	user.Name = user.Name[:min(MAX_NAME_LEN, len(user.Name))]
 	if strings.Contains(user.Name, ",") {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(ErrForbiddenChars.Error()))

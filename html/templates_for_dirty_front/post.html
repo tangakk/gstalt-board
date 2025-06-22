@@ -5,6 +5,7 @@
         <title>{{.Id}} - Гештальт</title>
     </head>
     <body>
+        {{template "auth" .}}
         {{template "send_form" .}}
         {{template "op" .Op}}
         {{template "posts_list" .}}
