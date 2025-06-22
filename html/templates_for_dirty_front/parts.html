@@ -1,8 +1,10 @@
 {{define "send_form"}}
         <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
         target="result">
+            {{if .User}}{{else}}
             <label for="author">Автор</label>
             <input type="text" id="author" name="Author">
+            {{end}}
 
             <label for="text">Текст</label>
             <textarea id="text" name="Text"></textarea>
