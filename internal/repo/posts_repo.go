@@ -3,6 +3,7 @@ package repo
 import (
 	"board/internal/models"
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -74,7 +75,7 @@ func (pr *Repo) CreatePost(post models.Post) error {
 	return err
 }
 
-func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed bool) ([]models.Post, error) {
+func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed bool, all bool) ([]models.Post, error) {
 	if n <= 0 {
 		return nil, fmt.Errorf("n should be positive")
 	}
@@ -88,14 +89,27 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 		t = " ASC"
 	}
 	n = min(n, pr.MaxPostsSelect)
-	rows, err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
-		From(POSTS_TABLE).
-		Where(sq.Eq{PARENT: 0, BOARD: board}).
-		Offset(uint64(offset)).
-		Limit(uint64(n)).
-		OrderBy(ID + t).
-		PlaceholderFormat(sq.Dollar).
-		RunWith(pr.db).Query()
+	var rows *sql.Rows
+	var err error
+	if all {
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+			From(POSTS_TABLE).
+			Where(sq.Eq{BOARD: board}).
+			Offset(uint64(offset)).
+			Limit(uint64(n)).
+			OrderBy(ID + t).
+			PlaceholderFormat(sq.Dollar).
+			RunWith(pr.db).Query()
+	} else {
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+			From(POSTS_TABLE).
+			Where(sq.Eq{PARENT: 0, BOARD: board}).
+			Offset(uint64(offset)).
+			Limit(uint64(n)).
+			OrderBy(ID + t).
+			PlaceholderFormat(sq.Dollar).
+			RunWith(pr.db).Query()
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +118,49 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 		var post models.Post
 		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board)
 		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (pr *Repo) GetAllPostsIdFromBoard(board string, reversed bool, all bool) ([]int, error) {
+	/*if n <= 0 {
+		return nil, fmt.Errorf("n should be positive")
+	}
+	if offset < 0 {
+		return nil, fmt.Errorf("offset should be non-negative")
+	}*/
+	t := ""
+	if reversed {
+		t = " DESC"
+	} else {
+		t = " ASC"
+	}
+	//n = min(n, pr.MaxPostsSelect)
+	var rows *sql.Rows
+	var err error
+	if all {
+		rows, err = sq.Select(ID).
+			From(POSTS_TABLE).
+			Where(sq.Eq{BOARD: board}).
+			OrderBy(ID + t).
+			PlaceholderFormat(sq.Dollar).
+			RunWith(pr.db).Query()
+	} else {
+		rows, err = sq.Select(ID).
+			From(POSTS_TABLE).
+			Where(sq.Eq{PARENT: 0, BOARD: board}).
+			OrderBy(ID + t).
+			PlaceholderFormat(sq.Dollar).
+			RunWith(pr.db).Query()
+	}
+	if err != nil {
+		return nil, err
+	}
+	posts := make([]int, 0)
+	for rows.Next() {
+		var i int
+		rows.Scan(&i)
+		posts = append(posts, i)
 	}
 	return posts, nil
 }
@@ -131,6 +188,34 @@ func (pr *Repo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([
 	for rows.Next() {
 		var post models.Post
 		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board)
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (pr *Repo) GetAllResponsesForPost(op int, reversed bool) ([]int, error) {
+	t := ""
+	if reversed {
+		t = " DESC"
+	} else {
+		t = " ASC"
+	}
+	//n = min(n, pr.MaxPostsSelect)
+	rows, err := sq.Select(ID).
+		From(POSTS_TABLE).
+		Where(sq.Eq{PARENT: op}).
+		//Offset(uint64(offset)).
+		//Limit(uint64(n)).
+		OrderBy(ID + t).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pr.db).Query()
+	if err != nil {
+		return nil, err
+	}
+	posts := make([]int, 0)
+	for rows.Next() {
+		var post int
+		rows.Scan(&post)
 		posts = append(posts, post)
 	}
 	return posts, nil

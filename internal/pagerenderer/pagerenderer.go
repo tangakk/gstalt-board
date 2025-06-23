@@ -2,6 +2,7 @@ package pagerenderer
 
 import (
 	"board/internal/models"
+	"board/internal/pagerenderer/upperapi"
 	"board/internal/repo"
 	"context"
 	"encoding/json"
@@ -25,8 +26,8 @@ const (
 )
 
 const (
-	API  = "http://localhost:8080"
-	SITE = "http://localhost:8081"
+	API  = "http://10.147.17.74:8080"
+	SITE = "http://10.147.17.74:8081"
 
 	CREATE = "/create"
 )
@@ -49,7 +50,32 @@ func NewPageRenderer(pr *repo.Repo) *PageRenderer {
 	r.Post("/login", a.Login)
 	r.Post("/quit", a.Quit)
 
+	r.Route("/api", upperapi.UpperApi)
+
+	FileServer(r, "/images", http.Dir("./images"))
+
 	return a
+}
+
+// FileServer conveniently sets up a http.FileServer handler to serve
+// static files from a http.FileSystem.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit any URL parameters.")
+	}
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
+		fs.ServeHTTP(w, r)
+	})
 }
 
 func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
@@ -104,17 +130,42 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req, _ = http.NewRequest("GET", API+fmt.Sprintf("%v/get-all", board), nil)
+	req.Header.Add("JWT", r.Context().Value("JWT").(string))
+	rt, _ = http.DefaultClient.Do(req)
+	postsOnBoard := 0
+	if rt.StatusCode == http.StatusOK {
+		data, _ := io.ReadAll(rt.Body)
+		var t []int
+		json.Unmarshal(data, &t)
+		postsOnBoard = len(t)
+	}
+
+	req, _ = http.NewRequest("GET", API+fmt.Sprintf("%v/get-all/all", board), nil)
+	req.Header.Add("JWT", r.Context().Value("JWT").(string))
+	rt, _ = http.DefaultClient.Do(req)
+	postsOnBoardWithR := 0
+	if rt.StatusCode == http.StatusOK {
+		data, _ := io.ReadAll(rt.Body)
+		var t []int
+		json.Unmarshal(data, &t)
+		postsOnBoard = len(t)
+	}
+
 	type T struct {
-		Board        string
-		Posts        []models.Post
-		CreateAction string
-		Site         string
-		Offset       int
-		User         string
+		Board             string
+		Posts             []models.Post
+		CreateAction      string
+		Site              string
+		Offset            int
+		User              string
+		PostsOnBoard      int
+		PostsOnBoardWithR int
 	}
 
 	var t = T{Board: board, Posts: posts, CreateAction: API + CREATE, Site: SITE,
-		Offset: offset, User: r.Context().Value("Username").(string)}
+		Offset: offset, User: r.Context().Value("Username").(string), PostsOnBoard: postsOnBoard,
+		PostsOnBoardWithR: postsOnBoardWithR}
 
 	err = ts.Execute(w, t)
 	if err != nil {
@@ -348,7 +399,7 @@ func (pr PageRenderer) Quit(w http.ResponseWriter, r *http.Request) {
 
 func ValidateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.Background()
+		ctx := r.Context()
 		if username, err := r.Cookie("Username"); err == nil {
 			ctx = context.WithValue(r.Context(), "Username", username.Value)
 			tokenStr, _ := r.Cookie("JWT")

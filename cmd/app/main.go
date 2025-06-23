@@ -11,7 +11,10 @@ import (
 
 func main() {
 	pr_cfg := repo.RepoConfig{}
-	cleanenv.ReadConfig("config.env", &pr_cfg)
+	err := cleanenv.ReadConfig("config.env", &pr_cfg)
+	if err != nil {
+		cleanenv.ReadEnv(pr_cfg)
+	}
 	pr, err := repo.NewPostsRepo(pr_cfg)
 	if err != nil {
 		panic(err)

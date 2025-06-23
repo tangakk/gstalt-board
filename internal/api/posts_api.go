@@ -4,11 +4,11 @@ import (
 	"board/internal/models"
 	"board/internal/models/boardmodes"
 	"board/internal/repo"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -37,11 +37,16 @@ func NewApi(pr *repo.Repo) *Api {
 
 	r.Post("/create", a.CreatePost)
 	r.Get("/{board}/get-{offset}-{n}", a.GetNPosts)
+	r.Get("/{board}/get-{offset}-{n}/{all}", a.GetNPosts)
+	r.Get("/{board}/get-all", a.GetAllPosts)
+	r.Get("/{board}/get-all/{all}", a.GetAllPosts)
 	r.Get("/get-{id}", a.GetPost)
 	r.Get("/get-responses-{id}-{offset}-{n}", a.GetResponses)
+	r.Get("/get-all-responses-{id}", a.GetAllResponses)
 
 	r.Post("/create-user", a.CreateUser)
 	r.Post("/login", a.Login)
+	r.Post("/op", a.Op)
 
 	r.Post("/create-board", a.CreateBoard)
 	r.Get("/get-boards", a.GetAllBoards)
@@ -71,7 +76,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	post.Timestamp = time.Now()
+	post.Timestamp = time.Now().Unix()
 	if post.Text == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(ErrEmptyText.Error()))
@@ -92,19 +97,23 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(ErrWrongFile.Error()))
 			return
 		}
-		fr, err := r.MultipartForm.File["Data"][0].Open()
+		file, handler, err := r.FormFile("Data")
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		data, err := io.ReadAll(fr)
+		defer file.Close()
+		dst, err := os.Create("images/" + strconv.FormatInt(time.Now().Unix(), 10) + "." + handler.Filename)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		post.Data = base64.StdEncoding.EncodeToString(data)
+		defer dst.Close()
+		if _, err := io.Copy(dst, file); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		post.Data = dst.Name()
 	}
 	if post.ParentId != 0 {
 		op, err := a.Repo.GetPost(post.ParentId)
@@ -186,7 +195,45 @@ func (a *Api) GetNPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := a.Repo.GetNPostsFromBoard(n, offset, boardStr, true)
+	all := chi.URLParam(r, "all") == "all"
+
+	posts, err := a.Repo.GetNPostsFromBoard(n, offset, boardStr, true, all)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	resultJson, err := json.Marshal(posts)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(resultJson)
+}
+
+func (a *Api) GetAllPosts(w http.ResponseWriter, r *http.Request) {
+	boardStr := "/" + chi.URLParam(r, "board")
+	board, err := a.Repo.GetBoard(boardStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(ErrNoBoard.Error()))
+		return
+	}
+
+	user, ok := r.Context().Value("user").(models.User)
+	if !ok {
+		user.Name = ANON
+	}
+	if !userCanReadBoard(user, board) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrCantRead.Error()))
+		return
+	}
+
+	all := chi.URLParam(r, "all") == "all"
+
+	posts, err := a.Repo.GetAllPostsIdFromBoard(boardStr, true, all)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -282,6 +329,48 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 	}
 
 	posts, err := a.Repo.GetResponsesForPost(id, offset, n, false)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	resultJson, err := json.Marshal(posts)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(resultJson)
+}
+
+func (a *Api) GetAllResponses(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	op, _ := a.Repo.GetPost(int64(id))
+
+	board, err := a.Repo.GetBoard(op.Board)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(ErrNoBoard.Error()))
+		return
+	}
+
+	user, ok := r.Context().Value("user").(models.User)
+	if !ok {
+		user.Name = ANON
+	}
+	if !userCanReadBoard(user, board) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrCantRead.Error()))
+		return
+	}
+
+	posts, err := a.Repo.GetAllResponsesForPost(id, false)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

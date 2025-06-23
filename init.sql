@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY, 
     author TEXT, 
     postText TEXT, 
-    postTime TIMESTAMP, 
+    postTime INT, 
     data TEXT, 
     parentId INTEGER, 
     board TEXT

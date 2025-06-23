@@ -38,3 +38,11 @@ func (pr *Repo) GetUser(name string) (models.User, error) {
 	}
 	return user, nil
 }
+
+func (pr *Repo) UpdateUserAdmin(name string, admin bool) error {
+	_, err := sq.Update(USERS_TABLE).
+		Set(ADMIN, admin).Where(sq.Eq{NAME: name}).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pr.db).Exec()
+	return err
+}

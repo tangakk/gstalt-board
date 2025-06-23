@@ -2,14 +2,13 @@ package models
 
 import (
 	"board/internal/models/boardmodes"
-	"time"
 )
 
 type Post struct {
 	Id        int64
 	Author    string
 	Text      string
-	Timestamp time.Time
+	Timestamp int64
 	Data      string
 	ParentId  int64
 	Board     string

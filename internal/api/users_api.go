@@ -112,11 +112,37 @@ func (a *Api) Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(resultJson)
 }
 
+func (a *Api) Op(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	err = schema.NewDecoder().Decode(&user, r.PostForm)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	userInCtx, ok := r.Context().Value("user").(models.User)
+	if !ok || !userInCtx.Admin {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrNotAdmin.Error()))
+		return
+	}
+	a.Repo.UpdateUserAdmin(user.Name, true)
+	w.Write([]byte("OK"))
+}
+
 func parseToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return secret_key, nil
 	})
 }
+
+var ErrInvalidToken = fmt.Errorf("ваш токен протух, перелогиньтесь")
 
 func (a *Api) ValidateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +162,10 @@ func (a *Api) ValidateUser(next http.Handler) http.Handler {
 		if tokenString != "" {
 			token, err := parseToken(tokenString)
 			if err != nil || !token.Valid {
-				next.ServeHTTP(w, r)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(ErrInvalidToken.Error()))
+				return
+				//next.ServeHTTP(w, r)
 			} else {
 				claims := token.Claims.(jwt.MapClaims)
 				name, ok := claims["name"].(string)
