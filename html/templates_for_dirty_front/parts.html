@@ -1,0 +1,58 @@
+{{define "send_form"}}
+        <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
+        target="result">
+            <label for="author">Автор</label>
+            <input type="text" id="author" name="Author">
+
+            <label for="text">Текст</label>
+            <textarea id="text" name="Text"></textarea>
+
+            <label for="data">Картинка</label>
+            <input type="file" name="Data" id="data" accept="image/jpeg">
+
+            {{if .Board}}
+            <input type="hidden" name="Board" value="{{ .Board }}">
+            {{else}}
+            <input type="hidden" name="ParentId" value="{{ .Id }}">
+            {{end}}
+            <button type="submit">Отправить</button>
+        </form>
+
+        <iframe name="result"></iframe><br>
+{{end}}
+
+{{define "posts_list"}}
+{{ range .Posts }}
+        <div style="border-width: 2px; border-style: solid;">
+            <div style="float: left;">
+            Автор: {{ .Author }}; #{{ .Id  }}<br>
+            {{ .Timestamp }}
+            </div>
+            <a href="/post/{{.Id}}-0-10" style="float: right;">Открыть</a>
+            <br>
+            <br>
+            <p>{{ .Text }}</p>
+            {{ if .Data }}
+            <img src="data:image/jpeg;base64, {{ .Data }}"
+            style="max-width: 200px;">
+            {{ end }}
+        </div>
+{{ end }}
+{{end}}
+
+{{define "op"}}
+<div style="border-width: 2px; border-style: solid; border-color: gold;">
+            <div style="float: left;">
+            Автор: {{ .Author }}; #{{ .Id  }}<br>
+            {{ .Timestamp }}
+            </div>
+            <a href="{{.Board}}-0-10" style="float: right;">К доске {{.Board}}</a>
+            <br>
+            <br>
+            <p>{{ .Text }}</p>
+            {{ if .Data }}
+            <img src="data:image/jpeg;base64, {{ .Data }}"
+            style="max-width: 200px;">
+            {{ end }}
+</div>
+{{end}}
