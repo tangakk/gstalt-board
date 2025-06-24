@@ -37,8 +37,8 @@ body {
 		padding: 10px;
 	}
 	.message img {
-		height 60px;
-		width: 60px;
+		height: 50px;
+		width: 50px;
 	}
 	.message > div {
 		word-break: break-word;
