@@ -1,8 +1,10 @@
 {{define "send_form"}}
         <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
         target="result">
+            {{if .User}}{{else}}
             <label for="author">Автор</label>
             <input type="text" id="author" name="Author">
+            {{end}}
 
             <label for="text">Текст</label>
             <textarea id="text" name="Text"></textarea>
@@ -33,8 +35,8 @@
             <br>
             <p>{{ .Text }}</p>
             {{ if .Data }}
-            <img src="data:image/jpeg;base64, {{ .Data }}"
-            style="max-width: 200px;">
+            <img src="/{{.Data}}"
+            style="max-height: 200px;">
             {{ end }}
         </div>
 {{ end }}
@@ -46,13 +48,39 @@
             Автор: {{ .Author }}; #{{ .Id  }}<br>
             {{ .Timestamp }}
             </div>
-            <a href="{{.Board}}-0-10" style="float: right;">К доске {{.Board}}</a>
+            <div style="float: right;">
+            {{ if .ParentId }}
+            Ответ на <a href="/post/{{.ParentId}}-0-10">{{.ParentId}}</a>
+            {{ else }}
+            <a href="{{.Board}}-0-10">{{.Board}}</a>
+            {{ end }}
+            </div>
             <br>
             <br>
             <p>{{ .Text }}</p>
             {{ if .Data }}
-            <img src="data:image/jpeg;base64, {{ .Data }}"
-            style="max-width: 200px;">
+            <img src="/{{.Data}}"
+            style="max-height: 200px;">
             {{ end }}
 </div>
+{{end}}
+
+{{define "auth"}}
+    <div style="float: right;">
+    {{if .User}}
+        Вы вошли: {{.User}}. <form action="/quit" method="POST">
+    <button type="submit">Выйти</button>
+    </form>
+    {{else}}
+        Войти/Зарегистрироваться:<br>
+        <form action="/login" method="post">
+            <label for="author">Имя</label>
+            <input type="text" id="author" name="Name">
+
+            <label for="text">Пароль</label>
+            <input type="password" id="text" name="Pass"></textarea>
+            <button type="submit">Отправить</button>
+        </form>
+    {{end}}
+    </div>
 {{end}}

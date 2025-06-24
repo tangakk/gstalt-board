@@ -1,2 +1,5 @@
 /config.env
 /postsrepo.log
+docker-compose.yml
+dockerfile
+/images
