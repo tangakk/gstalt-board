@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -23,6 +24,7 @@ const (
 	PARENT    = "parentId"
 	BOARD     = "board"
 	RESPONSES = "responses"
+	LA        = "lastAnswer"
 )
 
 // названия таблиц в бд
@@ -69,14 +71,19 @@ func NewPostsRepo(c RepoConfig) (*Repo, error) {
 
 func (pr *Repo) CreatePost(post models.Post) error {
 	_, err := sq.Insert(POSTS_TABLE).
-		Columns(AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
-		Values(post.Author, post.Text, post.Timestamp, post.Data, post.ParentId, post.Board).
+		Columns(AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, LA).
+		Values(post.Author, post.Text, post.Timestamp, post.Data, post.ParentId, post.Board, time.Now().Unix()).
 		PlaceholderFormat(sq.Dollar).
 		RunWith(pr.db).Exec()
 	//я не нашёл, как делать это через squirell
 	_, err = pr.db.Query(fmt.Sprint("UPDATE ", BOARDS_TABLE, " SET ", POSTSWITHR, "=", POSTSWITHR, "+1 WHERE ", NAME, "='", post.Board, "'"))
 	if post.ParentId != 0 {
 		pr.db.Query(fmt.Sprint("UPDATE ", POSTS_TABLE, " SET ", RESPONSES, "=", RESPONSES, "+1 WHERE ", ID, "=", post.ParentId))
+		sq.Update(POSTS_TABLE).
+			Set(LA, time.Now().Unix()).
+			Where(sq.Eq{ID: post.ParentId}).
+			PlaceholderFormat(sq.Dollar).
+			RunWith(pr.db).Exec()
 	} else {
 		_, err = pr.db.Query(fmt.Sprint("UPDATE ", BOARDS_TABLE, " SET ", POSTS, "=", POSTS, "+1 WHERE ", NAME, "='", post.Board, "'"))
 	}
@@ -100,7 +107,7 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 	var rows *sql.Rows
 	var err error
 	if all {
-		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES).
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES, LA).
 			From(POSTS_TABLE).
 			Where(sq.Eq{BOARD: board}).
 			Offset(uint64(offset)).
@@ -109,7 +116,7 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 			PlaceholderFormat(sq.Dollar).
 			RunWith(pr.db).Query()
 	} else {
-		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES).
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES, LA).
 			From(POSTS_TABLE).
 			Where(sq.Eq{PARENT: 0, BOARD: board}).
 			Offset(uint64(offset)).
@@ -124,7 +131,54 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 	posts := make([]models.Post, 0)
 	for rows.Next() {
 		var post models.Post
-		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board, &post.Responses)
+		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board, &post.Responses, &post.LastAnswered)
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (pr *Repo) GetRecentPostsFromBoard(n int, offset int, board string, recent bool, all bool) ([]models.Post, error) {
+	if n <= 0 {
+		return nil, fmt.Errorf("n should be positive")
+	}
+	if offset < 0 {
+		return nil, fmt.Errorf("offset should be non-negative")
+	}
+	t := ""
+	if recent {
+		t = " DESC"
+	} else {
+		t = " ASC"
+	}
+	n = min(n, pr.MaxPostsSelect)
+	var rows *sql.Rows
+	var err error
+	if all {
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES, LA).
+			From(POSTS_TABLE).
+			Where(sq.Eq{BOARD: board}).
+			Offset(uint64(offset)).
+			Limit(uint64(n)).
+			OrderBy(LA + t).
+			PlaceholderFormat(sq.Dollar).
+			RunWith(pr.db).Query()
+	} else {
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES, LA).
+			From(POSTS_TABLE).
+			Where(sq.Eq{PARENT: 0, BOARD: board}).
+			Offset(uint64(offset)).
+			Limit(uint64(n)).
+			OrderBy(LA + t).
+			PlaceholderFormat(sq.Dollar).
+			RunWith(pr.db).Query()
+	}
+	if err != nil {
+		return nil, err
+	}
+	posts := make([]models.Post, 0)
+	for rows.Next() {
+		var post models.Post
+		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board, &post.Responses, &post.LastAnswered)
 		posts = append(posts, post)
 	}
 	return posts, nil

@@ -40,8 +40,10 @@ func NewApi(pr *repo.Repo) *Api {
 	r.Get("/{board}/get-{offset}-{n}/{all}", a.GetNPosts)
 	r.Get("/{board}/get-all", a.GetAllPosts)
 	r.Get("/{board}/get-all/{all}", a.GetAllPosts)
+	r.Get("/{board}/get-recent-{offset}-{n}", a.GetRecent)
 	r.Get("/get-{id}", a.GetPost)
 	r.Get("/get-responses-{id}-{offset}-{n}", a.GetResponses)
+	r.Get("/get-responses-{id}-{offset}-{n}/{r}", a.GetResponses)
 	r.Get("/get-all-responses-{id}", a.GetAllResponses)
 
 	r.Post("/create-user", a.CreateUser)
@@ -218,6 +220,59 @@ func (a *Api) GetNPosts(w http.ResponseWriter, r *http.Request) {
 	w.Write(resultJson)
 }
 
+func (a *Api) GetRecent(w http.ResponseWriter, r *http.Request) {
+	offset, err := strconv.Atoi(chi.URLParam(r, "offset"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	n, err := strconv.Atoi(chi.URLParam(r, "n"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	boardStr := "/" + chi.URLParam(r, "board")
+	board, err := a.Repo.GetBoard(boardStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(ErrNoBoard.Error()))
+		return
+	}
+
+	user, ok := r.Context().Value("user").(models.User)
+	if !ok {
+		user.Name = ANON
+	}
+	if !userCanReadBoard(user, board) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrCantRead.Error()))
+		return
+	}
+
+	all := chi.URLParam(r, "all") == "all"
+
+	/*reverse := true
+	if n < 0 {
+		n = -n
+		reverse = false
+	}*/
+	posts, err := a.Repo.GetRecentPostsFromBoard(n, offset, boardStr, true, all)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	resultJson, err := json.Marshal(posts)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(resultJson)
+}
+
 func (a *Api) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	boardStr := "/" + chi.URLParam(r, "board")
 	board, err := a.Repo.GetBoard(boardStr)
@@ -334,7 +389,9 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := a.Repo.GetResponsesForPost(id, offset, n, false)
+	reverse := chi.URLParam(r, "r") == "r"
+
+	posts, err := a.Repo.GetResponsesForPost(id, offset, n, reverse)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

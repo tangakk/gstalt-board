@@ -5,14 +5,15 @@ import (
 )
 
 type Post struct {
-	Id        int64
-	Author    string
-	Text      string
-	Timestamp int64
-	Data      string
-	ParentId  int64
-	Board     string
-	Responses int64
+	Id           int64
+	Author       string
+	Text         string
+	Timestamp    int64
+	Data         string
+	ParentId     int64
+	Board        string
+	Responses    int64
+	LastAnswered int64
 }
 
 type User struct {

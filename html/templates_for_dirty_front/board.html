@@ -2,9 +2,10 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>{{ .Board }} - Гештальт</title>
+        <title>{{ .Board }} - Гештальч</title>
     </head>
-    <body>
+    <body style="background-color: lightblue;">
+        {{template "board_list" .}}
         <a href="/old/">На главную</a>
         {{template "auth" .}}
         <h1>{{ .Board }}</h1>

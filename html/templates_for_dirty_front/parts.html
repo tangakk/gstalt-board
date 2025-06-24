@@ -1,16 +1,16 @@
 {{define "send_form"}}
+        <div style="display: flex; justify-content: center;">
         <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
-        target="result">
+        target="result" >
             {{if .User}}{{else}}
             <label for="author">Автор</label>
-            <input type="text" id="author" name="Author">
+            <input type="text" id="author" name="Author" style="display: block; margin: 10px;">
             {{end}}
-
             <label for="text">Текст</label>
-            <textarea id="text" name="Text"></textarea>
+            <textarea id="text" name="Text" style="display: block; margin: 10px;"></textarea>
 
             <label for="data">Картинка</label>
-            <input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif">
+            <input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif" style="display: block; margin: 10px;">
 
             {{if .Board}}
             <input type="hidden" name="Board" value="{{ .Board }}">
@@ -19,44 +19,65 @@
             {{end}}
             <button type="submit">Отправить</button>
         </form>
-
-        <iframe name="result"></iframe><br>
+        </div>
+        <div style="display: flex; justify-content: center;">
+            <iframe name="result" height="40px" ></iframe><br>
+        </div>
 {{end}}
 
 {{define "posts_list"}}
-{{ range .Posts }}
-        <div style="border-width: 2px; border-style: solid;">
-            <div style="float: left;">
-            Автор: {{ .Author }}; #{{ .Id  }}<br>
-            {{ .Timestamp }}
-            </div>
-            {{if .Responses}}
-                <a href="/old/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">{{.Responses}} ответов</a>
+{{ range $key, $post := .Posts }}
+        <div style="border-width: 2px; border-style: solid; width: fit-content;
+        {{if $post.ParentId}}
+        background-color: #2fbeed;
+        {{end}}">
+            {{template "head" $post}}
+            {{if $post.ParentId}}
             {{else}}
-                <a href="/old/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">Открыть</a>
+            {{if $post.Responses}}
+                <a href="/old/post/{{$post.Id}}-0-10" style="float: right; margin-left: 10px;">{{$post.Responses}} ответов</a>
+            {{else}}
+                <a href="/old/post/{{$post.Id}}-0-10" style="float: right; margin-left: 10px;">Открыть</a>
             {{end}}
-            <br>
-            <br>
-            <p>{{ .Text }}</p>
-            {{ if .Data }}
-            <a href="/{{.Data}}" target="_blank"><img src="/{{.Data}}"
-            style="max-height: 200px;"></a>
+            {{end}}
+            {{ if $post.Data }}
+            <div style="display: inline-block;">
+            <a href="/{{$post.Data}}" target="_blank"><img src="/{{$post.Data}}"
+            style="max-height: 200px; margin-left: 20px;"></a>
+            </div>
             {{ end }}
+            <p style="display: inline-block; vertical-align: top;">{{ $post.Text }}</p>
         </div>
+        {{if $post.ParentId}}
+        {{else}}
+        {{ range $_, $resp := .ResponsesPosts}}
+            {{template "response" $resp}}
+        {{end}}
+        {{end}}
 {{ end }}
 {{end}}
 
-{{define "op"}}
-<div style="border-width: 2px; border-style: solid; border-color: gold;">
-            <div style="float: left;">
-            Автор: {{ .Author }}; #{{ .Id  }}<br>
-            {{ .Timestamp }}
+{{define "response"}}
+<div style="border-width: 2px; border-style: solid; background-color: #2fbeed; margin-left: 100px; width: fit-content;">
+            {{template "head" .}}
+            {{ if .Data }}
+            <div style="display: inline-block;">
+            <a href="/{{.Data}}" target="_blank"><img src="/{{.Data}}"
+            style="max-height: 200px;"></a>
             </div>
+            {{ end }}
+            <p style="display: inline-block; vertical-align: top;">{{ .Text }}</p>
+</div>
+{{end}}
+
+{{define "op"}}
+<div style="border-width: 2px; border-style: solid; border-color: gold; width: fit-content;">
+            {{template "head" .}}
             <div style="float: left; margin-left: 10px;">
             {{ if .ParentId }}
             Ответ на <a href="/old/post/{{.ParentId}}-0-10">{{.ParentId}}</a>
             {{ else }}
-            <a href="{{.Board}}-0-10">{{.Board}}</a>
+            <a href="/old{{.Board}}-0-10">{{.Board}}</a>
             {{ end }}
             </div>
             <br>
@@ -87,4 +108,18 @@
         </form>
     {{end}}
     </div>
+{{end}}
+
+{{define "board_list"}}
+    [
+    {{range .Boards}}
+        <a href="/old{{.Name}}-0-10"><b>{{.Name}}</b></a> 
+    {{end}}
+    ]
+{{end}}
+
+{{define "head"}}
+<div style="background-color: #2f88ed;">
+            Автор: <b style="color: red;">{{ .Author }}</b>; #{{ .Id  }} {{ StringTime .Timestamp }}
+</div>
 {{end}}

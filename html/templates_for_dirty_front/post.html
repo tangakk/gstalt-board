@@ -2,9 +2,9 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>{{.Id}} - Гештальт</title>
+        <title>{{.Op.Board}} - Гештальч</title>
     </head>
-    <body>
+    <body style="background-color: lightblue;">
         {{template "auth" .}}
         {{template "send_form" .}}
         {{template "op" .Op}}

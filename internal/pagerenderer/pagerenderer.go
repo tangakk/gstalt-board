@@ -12,8 +12,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
@@ -102,7 +104,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 	}
 	board := "/" + chi.URLParam(r, "board")
 
-	req, _ := http.NewRequest("GET", API+fmt.Sprintf("%v/get-%v-%v", board, offset, n), nil)
+	req, _ := http.NewRequest("GET", API+fmt.Sprintf("%v/get-recent-%v-%v", board, offset, n), nil)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
 	rt, err := http.DefaultClient.Do(req)
 	//rt, err := http.Get(API + fmt.Sprintf("%v/get-%v-%v", board, offset, n))
@@ -131,25 +133,93 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-
-	ts, err := template.ParseFiles(BOARD_TMPL, PARTS_TMPL)
+	ts, err := template.New("board.html").Funcs(template.FuncMap{"StringTime": unixToString}).
+		ParseFiles(BOARD_TMPL, PARTS_TMPL)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
+	rt, err = http.Get(API + "/get-boards")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	if rt.StatusCode != http.StatusOK {
+		w.WriteHeader(rt.StatusCode)
+		w.Write([]byte(rt.Status))
+		return
+	}
+
+	var boards []models.Board
+	data, err = io.ReadAll(rt.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	err = json.Unmarshal(data, &boards)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	type P struct {
+		models.Post
+		ResponsesPosts []models.Post
+	}
+
+	new_posts := make([]P, len(posts))
+	for i, p := range posts {
+		req, _ = http.NewRequest("GET", API+fmt.Sprintf("/get-responses-%v-%v-%v/r", p.Id, 0, 3), nil)
+		req.Header.Add("JWT", r.Context().Value("JWT").(string))
+		rt, err = http.DefaultClient.Do(req)
+		//rt, err = http.Get(API + fmt.Sprintf("/get-responses-%v-%v-%v", id, offset, n))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if rt.StatusCode != http.StatusOK {
+			w.WriteHeader(rt.StatusCode)
+			w.Write([]byte(rt.Status))
+			return
+		}
+
+		var resps []models.Post
+		data, err = io.ReadAll(rt.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		err = json.Unmarshal(data, &resps)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		slices.Reverse(resps)
+		new_posts[i] = P{Post: p, ResponsesPosts: resps}
+	}
+
 	type T struct {
 		Board        string
-		Posts        []models.Post
+		Posts        []P
 		CreateAction string
 		Site         string
 		Offset       int
 		User         string
+		Boards       []models.Board
 	}
 
-	var t = T{Board: board, Posts: posts, CreateAction: API + CREATE, Site: SITE,
-		Offset: offset, User: r.Context().Value("Username").(string)}
+	var t = T{Board: board, Posts: new_posts, CreateAction: API + CREATE, Site: SITE,
+		Offset: offset, User: r.Context().Value("Username").(string), Boards: boards}
 
 	err = ts.Execute(w, t)
 	if err != nil {
@@ -239,7 +309,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ts, err := template.ParseFiles(POSTS_TMPL, PARTS_TMPL)
+	ts, err := template.New("post.html").Funcs(template.FuncMap{"StringTime": unixToString}).ParseFiles(POSTS_TMPL, PARTS_TMPL)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -304,7 +374,8 @@ func (pr PageRenderer) MainPage(w http.ResponseWriter, r *http.Request) {
 
 	var t = T{Boards: boards, User: r.Context().Value("Username").(string), API: API}
 
-	ts, err := template.ParseFiles(MAIN_TMPl, PARTS_TMPL)
+	ts, err := template.New("main.html").Funcs(template.FuncMap{"StringTime": unixToString}).
+		ParseFiles(MAIN_TMPl, PARTS_TMPL)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -403,4 +474,9 @@ func renderFile(file string) http.HandlerFunc {
 		data, _ := io.ReadAll(file)
 		w.Write(data)
 	}
+}
+
+func unixToString(u int64) string {
+	t := time.Unix(u, 0)
+	return t.Format("2006/01/02    15:04")
 }
