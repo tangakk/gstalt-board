@@ -8,7 +8,7 @@
         {{template "auth" .}}
         <h1>Cписок борд:</h1>
         {{range .Boards}}
-        <a href="{{.Name}}-0-10"><b>{{.Name}}</b></a> - {{.Description}} | Постов: {{.PostsCount}} (всего {{.PostsCountWithResponses}})<br><br>
+        <a href="/old{{.Name}}-0-10"><b>{{.Name}}</b></a> - {{.Description}} | Постов: {{.PostsCount}} (всего {{.PostsCountWithResponses}})<br><br>
         {{end}}
         <form action="{{.API}}/create-board" method="post" target="cbr">
             <label for="name">Имя</label>

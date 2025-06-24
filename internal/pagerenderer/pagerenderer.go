@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -27,7 +28,7 @@ const (
 
 const (
 	API  = "http://10.147.17.74:8080"
-	SITE = "http://10.147.17.74:8081"
+	SITE = "http://10.147.17.74:8081/old"
 
 	CREATE = "/create"
 )
@@ -43,16 +44,24 @@ func NewPageRenderer(pr *repo.Repo) *PageRenderer {
 
 	r.Use(ValidateUser)
 
-	r.Get("/{board}-{offset}-{n}", a.BoardPage)
-	r.Get("/post/{id}-{offset}-{n}", a.PostPage)
-	r.Get("/", a.MainPage)
+	r.Get("/", renderFile("html/templates/index.html"))
+	r.Get("/{board}", renderFile("html/templates/board.html"))
+	r.Get("/{board}/{post}", renderFile("html/templates/post.html"))
 
-	r.Post("/login", a.Login)
-	r.Post("/quit", a.Quit)
+	r.Route("/old", func(r chi.Router) {
+		//r.Use(ValidateUser)
+		r.Get("/{board}-{offset}-{n}", a.BoardPage)
+		r.Get("/post/{id}-{offset}-{n}", a.PostPage)
+		r.Get("/", a.MainPage)
+
+		r.Post("/login", a.Login)
+		r.Post("/quit", a.Quit)
+	})
 
 	r.Route("/api", upperapi.UpperApi)
 
 	FileServer(r, "/images", http.Dir("./images"))
+	FileServer(r, "/internal", http.Dir("./html/templates"))
 
 	return a
 }
@@ -362,21 +371,21 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{Name: "JWT", Value: tokenStr})
-	http.SetCookie(w, &http.Cookie{Name: "Username", Value: user.Name})
+	http.SetCookie(w, &http.Cookie{Name: "JWT", Value: tokenStr, Path: "/"})
+	http.SetCookie(w, &http.Cookie{Name: "Username", Value: user.Name, Path: "/"})
 	http.Redirect(w, r, SITE, http.StatusFound)
 }
 
 func (pr PageRenderer) Quit(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{Name: "JWT", Value: "", MaxAge: -1})
-	http.SetCookie(w, &http.Cookie{Name: "Username", Value: "", MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{Name: "JWT", Value: "", MaxAge: -1, Path: "/"})
+	http.SetCookie(w, &http.Cookie{Name: "Username", Value: "", MaxAge: -1, Path: "/"})
 	http.Redirect(w, r, SITE, http.StatusFound)
 }
 
 func ValidateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		if username, err := r.Cookie("Username"); err == nil {
+		if username, err := r.Cookie("Username"); err == nil && username.Path == "" {
 			ctx = context.WithValue(r.Context(), "Username", username.Value)
 			tokenStr, _ := r.Cookie("JWT")
 			ctx = context.WithValue(ctx, "JWT", tokenStr.Value)
@@ -386,4 +395,12 @@ func ValidateUser(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func renderFile(file string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		file, _ := os.Open(file)
+		data, _ := io.ReadAll(file)
+		w.Write(data)
+	}
 }

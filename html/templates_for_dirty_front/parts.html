@@ -31,9 +31,9 @@
             {{ .Timestamp }}
             </div>
             {{if .Responses}}
-                <a href="/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">{{.Responses}} ответов</a>
+                <a href="/old/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">{{.Responses}} ответов</a>
             {{else}}
-                <a href="/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">Открыть</a>
+                <a href="/old/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">Открыть</a>
             {{end}}
             <br>
             <br>
@@ -54,7 +54,7 @@
             </div>
             <div style="float: left; margin-left: 10px;">
             {{ if .ParentId }}
-            Ответ на <a href="/post/{{.ParentId}}-0-10">{{.ParentId}}</a>
+            Ответ на <a href="/old/post/{{.ParentId}}-0-10">{{.ParentId}}</a>
             {{ else }}
             <a href="{{.Board}}-0-10">{{.Board}}</a>
             {{ end }}
@@ -72,12 +72,12 @@
 {{define "auth"}}
     <div style="float: right;">
     {{if .User}}
-        Вы вошли: {{.User}}. <form action="/quit" method="POST">
+        Вы вошли: {{.User}}. <form action="/old/quit" method="POST">
     <button type="submit">Выйти</button>
     </form>
     {{else}}
         Войти/Зарегистрироваться:<br>
-        <form action="/login" method="post">
+        <form action="/old/login" method="post">
             <label for="author">Имя</label>
             <input type="text" id="author" name="Name">
 
