@@ -1,0 +1,66 @@
+body {
+		font-family: cursive;
+		width: 1000px;
+		height: 100vh;
+		margin: auto;
+	}
+	body > div {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+	body > div > * {
+		margin: 40px;
+	}
+	div.center {
+		display: flex;
+		justify-content: center;
+	}
+	.border {
+		border: 1px solid;
+	}
+	.result {
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+		overflow-y: hidden;
+		gap: 20px;
+		margin: 0;
+	}
+	.result.reverse {
+		flex-direction: column-reverse;
+	}
+	.message {
+		display: flex;
+		flex-direction: row;
+		gap: 20px;
+		padding: 10px;
+	}
+	.message img {
+		height 60px;
+		width: 60px;
+	}
+	.message > div {
+		word-break: break-word;
+	}
+	.input {
+	}
+	.input > div {
+		display: flex;
+		flex-direction: column;
+	}
+	.input > .grow-4 {
+		flex-grow: 4;
+	}
+	h1 {
+		font-size: 36px;
+		margin: 0;
+	}
+	h2 {
+		font-size: 24px;
+		margin: 0;
+	}
+	h3 {
+		font-size: 18px;
+		margin: 0;
+	}
