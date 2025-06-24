@@ -2,25 +2,29 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>{{ .Board }} - Гештальт</title>
+        <title>Гештальт</title>
     </head>
     <body>
 		<div>
-			<div class="center"><h1>{{ .Board }}</h1></div>
-			<div class="result">
-				{{ range .Posts }}
-				<div>
-					Автор: {{ .Author }}; #{{ .Id  }}<br>
-					{{ .Timestamp }}
-					<br>
-					<p>{{ .Text }}</p>
-					{{ if .Data }}
-					<img src="data:image/jpeg;base64, {{ .Data }}">
-					{{ end }}
-				</div>
-				{{ end }}
+			<div class="center title">
+			<a href="">На главную страницу</a>
+			<h1>/...</h1>
 			</div>
-			<form class="input" action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
+			<div class="result reverse">
+				<div class="border message">
+					<img src="">
+					<div>
+						<div class="row">
+							<h4>#0</h4>
+							<h4>Автор</h4>
+							<h4>00:00</h4>
+						</div>
+						<h2>Текст</h2>
+					</div>
+					<a class="button center" href="">Ответить</a>
+				</div>
+			</div>
+			<form class="input" action="" method="post" enctype="multipart/form-data"
 			target="result">
 				<div>
 					<label for="author">Автор</label>
@@ -34,47 +38,9 @@
 				</div>
 				<div>
 					<input type="hidden" name="Board" value="{{ .Board }}">
-					<button type="submit">Отправить</button>
+					<button class="button" type="submit">Отправить</button>
 				</div>
 			</form>
 		</div>
     </body>
-	<style>
-	body {
-		width: 1000px;
-		height: 100vh;
-		margin: auto;
-	}
-	body > div {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-	body > div > * {
-		margin: 40px;
-	}
-	div.center {
-		display: flex;
-		justify-content: center;
-	}
-	.result {
-		display: flex;
-		flex-direction: column-reverse;
-		flex-grow: 1;
-		overflow-y: scroll;
-		margin: 0;
-	}
-	.input {
-	}
-	.input > div {
-		display: flex;
-		flex-direction: column;
-	}
-	.input > .grow-4 {
-		flex-grow: 4;
-	}
-	h1 {
-		margin: 0;
-	}
-	</style>
 </html>
