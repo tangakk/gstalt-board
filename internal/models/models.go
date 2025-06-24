@@ -12,6 +12,7 @@ type Post struct {
 	Data      string
 	ParentId  int64
 	Board     string
+	Responses int64
 }
 
 type User struct {
@@ -21,10 +22,12 @@ type User struct {
 }
 
 type Board struct {
-	Name        string
-	Description string
-	Admins      []string
-	Mode        boardmodes.BoardMode
-	UsersList   []string
-	Owner       string
+	Name                    string
+	Description             string
+	Admins                  []string
+	Mode                    boardmodes.BoardMode
+	UsersList               []string
+	Owner                   string
+	PostsCount              int64
+	PostsCountWithResponses int64
 }

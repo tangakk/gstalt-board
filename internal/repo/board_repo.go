@@ -8,11 +8,13 @@ import (
 )
 
 const (
-	DESC   = "description"
-	ADMINS = "admins"
-	MODE   = "mode"
-	USERS  = "usersList"
-	OWNER  = "owner"
+	DESC       = "description"
+	ADMINS     = "admins"
+	MODE       = "mode"
+	USERS      = "usersList"
+	OWNER      = "owner"
+	POSTS      = "posts"
+	POSTSWITHR = "postsWithR"
 )
 
 const (
@@ -30,12 +32,13 @@ func (pr *Repo) CreateBoard(board models.Board) error {
 
 func (pr *Repo) GetBoard(name string) (models.Board, error) {
 	board := models.Board{}
-	err := sq.Select(NAME, DESC, ADMINS, MODE, USERS, OWNER).
+	err := sq.Select(NAME, DESC, ADMINS, MODE, USERS, OWNER, POSTS, POSTSWITHR).
 		From(BOARDS_TABLE).
 		Where(sq.Eq{NAME: name}).
 		PlaceholderFormat(sq.Dollar).
 		RunWith(pr.db).QueryRow().Scan(
-		&board.Name, &board.Description, (*pq.StringArray)(&board.Admins), &board.Mode, (*pq.StringArray)(&board.UsersList), &board.Owner)
+		&board.Name, &board.Description, (*pq.StringArray)(&board.Admins), &board.Mode, (*pq.StringArray)(&board.UsersList), &board.Owner,
+		&board.PostsCount, &board.PostsCountWithResponses)
 	if err != nil {
 		return models.Board{}, err
 	}
@@ -54,7 +57,7 @@ func (pr *Repo) UpdateBoard(board models.Board) error {
 }
 
 func (pr *Repo) GetAllBoards() ([]models.Board, error) {
-	rows, err := sq.Select(NAME, DESC, ADMINS, MODE, USERS, OWNER).
+	rows, err := sq.Select(NAME, DESC, ADMINS, MODE, USERS, OWNER, POSTS, POSTSWITHR).
 		From(BOARDS_TABLE).
 		PlaceholderFormat(sq.Dollar).
 		RunWith(pr.db).Query()
@@ -64,7 +67,8 @@ func (pr *Repo) GetAllBoards() ([]models.Board, error) {
 	boards := make([]models.Board, 0)
 	for rows.Next() {
 		var board models.Board
-		rows.Scan(&board.Name, &board.Description, (*pq.StringArray)(&board.Admins), &board.Mode, (*pq.StringArray)(&board.UsersList), &board.Owner)
+		rows.Scan(&board.Name, &board.Description, (*pq.StringArray)(&board.Admins), &board.Mode, (*pq.StringArray)(&board.UsersList), &board.Owner,
+			&board.PostsCount, &board.PostsCountWithResponses)
 		boards = append(boards, board)
 	}
 	return boards, nil

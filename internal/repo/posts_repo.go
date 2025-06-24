@@ -22,6 +22,7 @@ const (
 	DATA      = "data"
 	PARENT    = "parentId"
 	BOARD     = "board"
+	RESPONSES = "responses"
 )
 
 // названия таблиц в бд
@@ -72,6 +73,13 @@ func (pr *Repo) CreatePost(post models.Post) error {
 		Values(post.Author, post.Text, post.Timestamp, post.Data, post.ParentId, post.Board).
 		PlaceholderFormat(sq.Dollar).
 		RunWith(pr.db).Exec()
+	//я не нашёл, как делать это через squirell
+	_, err = pr.db.Query(fmt.Sprint("UPDATE ", BOARDS_TABLE, " SET ", POSTSWITHR, "=", POSTSWITHR, "+1 WHERE ", NAME, "='", post.Board, "'"))
+	if post.ParentId != 0 {
+		pr.db.Query(fmt.Sprint("UPDATE ", POSTS_TABLE, " SET ", RESPONSES, "=", RESPONSES, "+1 WHERE ", ID, "=", post.ParentId))
+	} else {
+		_, err = pr.db.Query(fmt.Sprint("UPDATE ", BOARDS_TABLE, " SET ", POSTS, "=", POSTS, "+1 WHERE ", NAME, "='", post.Board, "'"))
+	}
 	return err
 }
 
@@ -92,7 +100,7 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 	var rows *sql.Rows
 	var err error
 	if all {
-		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES).
 			From(POSTS_TABLE).
 			Where(sq.Eq{BOARD: board}).
 			Offset(uint64(offset)).
@@ -101,7 +109,7 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 			PlaceholderFormat(sq.Dollar).
 			RunWith(pr.db).Query()
 	} else {
-		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+		rows, err = sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES).
 			From(POSTS_TABLE).
 			Where(sq.Eq{PARENT: 0, BOARD: board}).
 			Offset(uint64(offset)).
@@ -116,7 +124,7 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 	posts := make([]models.Post, 0)
 	for rows.Next() {
 		var post models.Post
-		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board)
+		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board, &post.Responses)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -173,7 +181,7 @@ func (pr *Repo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([
 		t = " ASC"
 	}
 	n = min(n, pr.MaxPostsSelect)
-	rows, err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+	rows, err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES).
 		From(POSTS_TABLE).
 		Where(sq.Eq{PARENT: op}).
 		Offset(uint64(offset)).
@@ -187,7 +195,7 @@ func (pr *Repo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([
 	posts := make([]models.Post, 0)
 	for rows.Next() {
 		var post models.Post
-		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board)
+		rows.Scan(&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board, &post.Responses)
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -223,12 +231,12 @@ func (pr *Repo) GetAllResponsesForPost(op int, reversed bool) ([]int, error) {
 
 func (pr *Repo) GetPost(id int64) (models.Post, error) {
 	post := models.Post{}
-	err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD).
+	err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES).
 		From(POSTS_TABLE).
 		Where(sq.Eq{ID: id}).
 		PlaceholderFormat(sq.Dollar).
 		RunWith(pr.db).QueryRow().Scan(
-		&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board)
+		&post.Id, &post.Author, &post.Text, &post.Timestamp, &post.Data, &post.ParentId, &post.Board, &post.Responses)
 	if err != nil {
 		return models.Post{}, err
 	}

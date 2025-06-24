@@ -130,42 +130,17 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, _ = http.NewRequest("GET", API+fmt.Sprintf("%v/get-all", board), nil)
-	req.Header.Add("JWT", r.Context().Value("JWT").(string))
-	rt, _ = http.DefaultClient.Do(req)
-	postsOnBoard := 0
-	if rt.StatusCode == http.StatusOK {
-		data, _ := io.ReadAll(rt.Body)
-		var t []int
-		json.Unmarshal(data, &t)
-		postsOnBoard = len(t)
-	}
-
-	req, _ = http.NewRequest("GET", API+fmt.Sprintf("%v/get-all/all", board), nil)
-	req.Header.Add("JWT", r.Context().Value("JWT").(string))
-	rt, _ = http.DefaultClient.Do(req)
-	postsOnBoardWithR := 0
-	if rt.StatusCode == http.StatusOK {
-		data, _ := io.ReadAll(rt.Body)
-		var t []int
-		json.Unmarshal(data, &t)
-		postsOnBoard = len(t)
-	}
-
 	type T struct {
-		Board             string
-		Posts             []models.Post
-		CreateAction      string
-		Site              string
-		Offset            int
-		User              string
-		PostsOnBoard      int
-		PostsOnBoardWithR int
+		Board        string
+		Posts        []models.Post
+		CreateAction string
+		Site         string
+		Offset       int
+		User         string
 	}
 
 	var t = T{Board: board, Posts: posts, CreateAction: API + CREATE, Site: SITE,
-		Offset: offset, User: r.Context().Value("Username").(string), PostsOnBoard: postsOnBoard,
-		PostsOnBoardWithR: postsOnBoardWithR}
+		Offset: offset, User: r.Context().Value("Username").(string)}
 
 	err = ts.Execute(w, t)
 	if err != nil {
@@ -315,9 +290,10 @@ func (pr PageRenderer) MainPage(w http.ResponseWriter, r *http.Request) {
 	type T struct {
 		Boards []models.Board
 		User   string
+		API    string
 	}
 
-	var t = T{Boards: boards, User: r.Context().Value("Username").(string)}
+	var t = T{Boards: boards, User: r.Context().Value("Username").(string), API: API}
 
 	ts, err := template.ParseFiles(MAIN_TMPl, PARTS_TMPL)
 	if err != nil {

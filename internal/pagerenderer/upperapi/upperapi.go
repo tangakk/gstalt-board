@@ -20,8 +20,8 @@ func UpperApi(r chi.Router) {
 	r.Get("/get/comments", getComments)
 }
 
-var ErrBadRequest = fmt.Errorf("{\"Error_desc\":\"херовый реквест\"}")
-var ErrNoResponseFromNormalApi = fmt.Errorf("{\"Error_desc\":\"нормальное api не отвечает\"}")
+var ErrBadRequest = fmt.Errorf("херовый реквест")
+var ErrNoResponseFromNormalApi = fmt.Errorf("нормальное api не отвечает")
 
 func getBoards(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest("GET", NORMAL_API+"/get-boards", nil)
@@ -53,15 +53,15 @@ func getBoards(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	var result = []any{}
+	/*var result = []any{}
 	for _, board := range boards {
 		result = append(result, map[string]string{
 			"Name":        board.Name,
 			"Description": board.Description,
 			"url":         r.Host + board.Name,
 		})
-	}
-	resultJson, err := json.Marshal(result)
+	}*/
+	resultJson, err := json.Marshal(boards)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -91,8 +91,8 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
 			return
 		}
-		n := to - offset
-		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-%v-%v", NORMAL_API, board, offset, n), nil)
+		n := to - offset + 1
+		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-%v-%v", NORMAL_API, board, offset, -n), nil)
 	}
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)

@@ -123,15 +123,16 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		post.Board = op.Board
-		w.Write([]byte("Установлена доска " + op.Board + "\n"))
+		//w.Write([]byte("Установлена доска " + op.Board + "\n"))
 	}
-	user, ok := r.Context().Value("user").(models.User)
+	user, _ := r.Context().Value("user").(models.User)
 
-	if ok {
+	if user.Name != "" {
 		post.Author = user.Name
 	} else {
 		_, err = a.Repo.GetUser(post.Author)
-		if err == nil { //кто-то пытается анонимно постить под пользователя
+		if err == nil {
+			//кто-то пытается анонимно постить под пользователя
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte(ErrBadMan.Error()))
 			return
@@ -197,7 +198,12 @@ func (a *Api) GetNPosts(w http.ResponseWriter, r *http.Request) {
 
 	all := chi.URLParam(r, "all") == "all"
 
-	posts, err := a.Repo.GetNPostsFromBoard(n, offset, boardStr, true, all)
+	reverse := true
+	if n < 0 {
+		n = -n
+		reverse = false
+	}
+	posts, err := a.Repo.GetNPostsFromBoard(n, offset, boardStr, reverse, all)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

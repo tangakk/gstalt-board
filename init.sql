@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS posts (
     postTime INT, 
     data TEXT, 
     parentId INTEGER, 
-    board TEXT
+    board TEXT,
+    responses INT
 );
 
 CREATE TABLE IF NOT EXISTS boards (
@@ -20,5 +21,7 @@ CREATE TABLE IF NOT EXISTS boards (
     admins TEXT[],
     mode INT,
     usersList TEXT[],
-    owner TEXT
+    owner TEXT,
+    posts INT,
+    postsWithR INT
 );

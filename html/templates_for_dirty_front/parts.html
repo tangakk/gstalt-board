@@ -10,7 +10,7 @@
             <textarea id="text" name="Text"></textarea>
 
             <label for="data">Картинка</label>
-            <input type="file" name="Data" id="data" accept="image/jpeg">
+            <input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif">
 
             {{if .Board}}
             <input type="hidden" name="Board" value="{{ .Board }}">
@@ -30,13 +30,17 @@
             Автор: {{ .Author }}; #{{ .Id  }}<br>
             {{ .Timestamp }}
             </div>
-            <a href="/post/{{.Id}}-0-10" style="float: right;">Открыть</a>
+            {{if .Responses}}
+                <a href="/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">{{.Responses}} ответов</a>
+            {{else}}
+                <a href="/post/{{.Id}}-0-10" style="float: left; margin-left: 10px;">Открыть</a>
+            {{end}}
             <br>
             <br>
             <p>{{ .Text }}</p>
             {{ if .Data }}
-            <img src="/{{.Data}}"
-            style="max-height: 200px;">
+            <a href="/{{.Data}}" target="_blank"><img src="/{{.Data}}"
+            style="max-height: 200px;"></a>
             {{ end }}
         </div>
 {{ end }}
@@ -48,7 +52,7 @@
             Автор: {{ .Author }}; #{{ .Id  }}<br>
             {{ .Timestamp }}
             </div>
-            <div style="float: right;">
+            <div style="float: left; margin-left: 10px;">
             {{ if .ParentId }}
             Ответ на <a href="/post/{{.ParentId}}-0-10">{{.ParentId}}</a>
             {{ else }}
@@ -59,8 +63,8 @@
             <br>
             <p>{{ .Text }}</p>
             {{ if .Data }}
-            <img src="/{{.Data}}"
-            style="max-height: 200px;">
+            <a href="/{{.Data}}" target="_blank"><img src="/{{.Data}}"
+            style="max-height: 200px;"></a>
             {{ end }}
 </div>
 {{end}}
