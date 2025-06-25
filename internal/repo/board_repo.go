@@ -27,6 +27,13 @@ func (pr *Repo) CreateBoard(board models.Board) error {
 		Values(board.Name, board.Description, pq.Array(board.Admins), board.Mode, pq.Array(board.UsersList), board.Owner).
 		PlaceholderFormat(sq.Dollar).
 		RunWith(pr.db).Exec()
+	if err != nil {
+		return err
+	}
+	_, err = pr.db.Exec(
+		"CREATE TABLE IF NOT EXISTS \"" +
+			(board.Name) +
+			"\" (id SERIAL PRIMARY KEY,author TEXT, postText TEXT, postTime INT, data TEXT, parentId INTEGER, board TEXT, responses INT DEFAULT 0, lastAnswer INT DEFAULT 0);")
 	return err
 }
 

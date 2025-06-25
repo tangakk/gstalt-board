@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 	"github.com/gorilla/schema"
 )
 
@@ -27,6 +28,13 @@ type Api struct {
 	Router *chi.Mux
 	Repo   *repo.Repo
 }
+
+var postRateLimiter = httprate.NewRateLimiter(1, 10*time.Second, httprate.WithLimitHandler(
+	func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		w.Write([]byte("вы постите слишком часто"))
+	},
+))
 
 func NewApi(pr *repo.Repo) *Api {
 	r := chi.NewRouter()
@@ -41,10 +49,10 @@ func NewApi(pr *repo.Repo) *Api {
 	r.Get("/{board}/get-all", a.GetAllPosts)
 	r.Get("/{board}/get-all/{all}", a.GetAllPosts)
 	r.Get("/{board}/get-recent-{offset}-{n}", a.GetRecent)
-	r.Get("/get-{id}", a.GetPost)
-	r.Get("/get-responses-{id}-{offset}-{n}", a.GetResponses)
-	r.Get("/get-responses-{id}-{offset}-{n}/{r}", a.GetResponses)
-	r.Get("/get-all-responses-{id}", a.GetAllResponses)
+	r.Get("/{board}/get-one-{id}", a.GetPost)
+	r.Get("/{board}/get-responses-{id}-{offset}-{n}", a.GetResponses)
+	r.Get("/{board}/get-responses-{id}-{offset}-{n}/{r}", a.GetResponses)
+	r.Get("/{board}/get-all-responses-{id}", a.GetAllResponses)
 
 	r.Post("/create-user", a.CreateUser)
 	r.Post("/login", a.Login)
@@ -65,7 +73,11 @@ var ErrNoBoard = fmt.Errorf("такой доски не существует")
 var ErrCantPost = fmt.Errorf("вы не можете постить на этой доске")
 
 func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
+	if postRateLimiter.RespondOnLimit(w, r, r.RemoteAddr) {
+		return
+	}
 	var post models.Post
+	r.Body = http.MaxBytesReader(w, r.Body, MAX_MULTIPART_SIZE)
 	err := r.ParseMultipartForm(MAX_MULTIPART_SIZE)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -79,7 +91,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	post.Timestamp = time.Now().Unix()
-	if post.Text == "" {
+	if strings.TrimSpace(string(post.Text)) == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(ErrEmptyText.Error()))
 		return
@@ -87,7 +99,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 	if post.Author == "" {
 		post.Author = ANON
 	}
-	post.Author = post.Author[:min(MAX_NAME_LEN, len(post.Author))]
+	post.Author = string([]rune(post.Author)[:min(MAX_NAME_LEN, len([]rune(post.Author)))])
 	if strings.Contains(post.Author, ",") {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(ErrForbiddenChars.Error()))
@@ -118,7 +130,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		post.Data = dst.Name()
 	}
 	if post.ParentId != 0 {
-		op, err := a.Repo.GetPost(post.ParentId)
+		op, err := a.Repo.GetPost(post.ParentId, post.Board)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -311,13 +323,14 @@ func (a *Api) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 
 func (a *Api) GetPost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	boardS := "/" + chi.URLParam(r, "board")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	post, err := a.Repo.GetPost(int64(id))
+	post, err := a.Repo.GetPost(int64(id), boardS)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -352,6 +365,7 @@ func (a *Api) GetPost(w http.ResponseWriter, r *http.Request) {
 
 func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 	offset, err := strconv.Atoi(chi.URLParam(r, "offset"))
+	boardS := "/" + chi.URLParam(r, "board")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -370,7 +384,13 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op, _ := a.Repo.GetPost(int64(id))
+	op, err := a.Repo.GetPost(int64(id), boardS)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	board, err := a.Repo.GetBoard(op.Board)
 	if err != nil {
@@ -391,7 +411,7 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 
 	reverse := chi.URLParam(r, "r") == "r"
 
-	posts, err := a.Repo.GetResponsesForPost(id, offset, n, reverse)
+	posts, err := a.Repo.GetResponsesForPost(id, offset, n, reverse, boardS)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -408,13 +428,14 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 
 func (a *Api) GetAllResponses(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	boardS := "/" + chi.URLParam(r, "board")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	op, _ := a.Repo.GetPost(int64(id))
+	op, _ := a.Repo.GetPost(int64(id), boardS)
 
 	board, err := a.Repo.GetBoard(op.Board)
 	if err != nil {
@@ -433,7 +454,7 @@ func (a *Api) GetAllResponses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := a.Repo.GetAllResponsesForPost(id, false)
+	posts, err := a.Repo.GetAllResponsesForPost(id, false, boardS)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

@@ -23,6 +23,6 @@ CREATE TABLE IF NOT EXISTS boards (
     mode INT,
     usersList TEXT[],
     owner TEXT,
-    posts INT,
-    postsWithR INT
+    posts INT DEFAULT 0,
+    postsWithR INT DEFAULT 0
 );
