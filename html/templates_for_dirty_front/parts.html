@@ -61,9 +61,9 @@ id="{{.Id}}">
 {{end}}
 
 {{define "op"}}
-<div style="border-width: 2px; border-style: solid; border-color: gold; width: fit-content; overflow: hidden;">
+<div style="border-width: 2px; border-style: solid; border-color: gold; width: fit-content; overflow: hidden;" id="{{.Id}}">
             {{template "head" .}}
-            <div style="float: left; margin-left: 10px;">
+            <div style="float: left; margin-left: 10px;" >
             {{ if .ParentId }}
             Ответ на <a href="/old{{.Board}}/{{.ParentId}}">{{.ParentId}}</a>
             {{ else }}
