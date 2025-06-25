@@ -3,25 +3,27 @@
     <head>
         <meta charset="utf-8">
         <title>Гештальт</title>
+		<link rel="stylesheet" href="/internal/style.css">
+		<script src="/internal/script.js"></script>
     </head>
     <body>
 		<div>
 			<div class="center title">
-			<a href="">На главную страницу</a>
-			<h1>/...</h1>
+			<a href="/">На главную страницу</a>
+			<h1 id="board-title">/...</h1>
 			</div>
-			<div class="result reverse">
+			<div id="result" class="result reverse">
 				<div class="border message">
-					<img src="">
+					<img class="post-avatar" src="">
 					<div>
 						<div class="row">
-							<h4>#0</h4>
-							<h4>Автор</h4>
-							<h4>00:00</h4>
+							<h4 class="post-id">#0</h4>
+							<h4 class="post-author">...</h4>
+							<h4 class="post-time">00:00</h4>
 						</div>
-						<h2>Текст</h2>
+						<h2 class="post-text">...</h2>
 					</div>
-					<a class="button center" href="">Ответить</a>
+					<a class="post-reply button center" href="">Ответить</a>
 				</div>
 			</div>
 			<form class="input" action="" method="post" enctype="multipart/form-data"

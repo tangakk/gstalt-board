@@ -51,6 +51,7 @@ body {
 	.message > div {
 		word-break: break-word;
 		flex-grow: 1;
+		width: min-content;
 	}
 	.message .row {
 		display: flex;
