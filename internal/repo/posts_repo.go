@@ -28,9 +28,9 @@ const (
 )
 
 // названия таблиц в бд
-const (
+/*const (
 	POSTS_TABLE = "posts"
-)
+)*/
 
 const LOGFILE_NAME = "postsrepo.log"
 
@@ -70,6 +70,7 @@ func NewPostsRepo(c RepoConfig) (*Repo, error) {
 }
 
 func (pr *Repo) CreatePost(post models.Post) error {
+	POSTS_TABLE := "\"" + post.Board + "\""
 	_, err := sq.Insert(POSTS_TABLE).
 		Columns(AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, LA).
 		Values(post.Author, post.Text, post.Timestamp, post.Data, post.ParentId, post.Board, time.Now().Unix()).
@@ -91,6 +92,7 @@ func (pr *Repo) CreatePost(post models.Post) error {
 }
 
 func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed bool, all bool) ([]models.Post, error) {
+	POSTS_TABLE := "\"" + board + "\""
 	if n <= 0 {
 		return nil, fmt.Errorf("n should be positive")
 	}
@@ -138,6 +140,7 @@ func (pr *Repo) GetNPostsFromBoard(n int, offset int, board string, reversed boo
 }
 
 func (pr *Repo) GetRecentPostsFromBoard(n int, offset int, board string, recent bool, all bool) ([]models.Post, error) {
+	POSTS_TABLE := "\"" + board + "\""
 	if n <= 0 {
 		return nil, fmt.Errorf("n should be positive")
 	}
@@ -185,6 +188,7 @@ func (pr *Repo) GetRecentPostsFromBoard(n int, offset int, board string, recent 
 }
 
 func (pr *Repo) GetAllPostsIdFromBoard(board string, reversed bool, all bool) ([]int, error) {
+	POSTS_TABLE := "\"" + board + "\""
 	/*if n <= 0 {
 		return nil, fmt.Errorf("n should be positive")
 	}
@@ -227,7 +231,8 @@ func (pr *Repo) GetAllPostsIdFromBoard(board string, reversed bool, all bool) ([
 	return posts, nil
 }
 
-func (pr *Repo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([]models.Post, error) {
+func (pr *Repo) GetResponsesForPost(op int, offset int, n int, reversed bool, board string) ([]models.Post, error) {
+	POSTS_TABLE := "\"" + board + "\""
 	t := ""
 	if reversed {
 		t = " DESC"
@@ -255,7 +260,8 @@ func (pr *Repo) GetResponsesForPost(op int, offset int, n int, reversed bool) ([
 	return posts, nil
 }
 
-func (pr *Repo) GetAllResponsesForPost(op int, reversed bool) ([]int, error) {
+func (pr *Repo) GetAllResponsesForPost(op int, reversed bool, board string) ([]int, error) {
+	POSTS_TABLE := "\"" + board + "\""
 	t := ""
 	if reversed {
 		t = " DESC"
@@ -283,8 +289,9 @@ func (pr *Repo) GetAllResponsesForPost(op int, reversed bool) ([]int, error) {
 	return posts, nil
 }
 
-func (pr *Repo) GetPost(id int64) (models.Post, error) {
+func (pr *Repo) GetPost(id int64, board string) (models.Post, error) {
 	post := models.Post{}
+	POSTS_TABLE := "\"" + board + "\""
 	err := sq.Select(ID, AUTHOR, TEXT, TIMESTAMP, DATA, PARENT, BOARD, RESPONSES).
 		From(POSTS_TABLE).
 		Where(sq.Eq{ID: id}).

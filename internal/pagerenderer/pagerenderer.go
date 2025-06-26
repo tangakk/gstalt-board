@@ -5,13 +5,16 @@ import (
 	"board/internal/pagerenderer/upperapi"
 	"board/internal/repo"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"html"
 	"html/template"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -30,9 +33,13 @@ const (
 
 const (
 	API  = "http://10.147.17.74:8080"
-	SITE = "http://10.147.17.74:8081/old"
+	SITE = "/old"
 
 	CREATE = "/create"
+)
+
+const (
+	BASE_N = 20
 )
 
 type PageRenderer struct {
@@ -52,8 +59,11 @@ func NewPageRenderer(pr *repo.Repo) *PageRenderer {
 
 	r.Route("/old", func(r chi.Router) {
 		//r.Use(ValidateUser)
-		r.Get("/{board}-{offset}-{n}", a.BoardPage)
-		r.Get("/post/{id}-{offset}-{n}", a.PostPage)
+		//r.Get("/{board}-{offset}-{n}", a.BoardPage)
+		r.Get("/{board}", a.BoardPage)
+		r.Get("/{board}/p{page}", a.BoardPage)
+		//r.Get("/post/{id}-{offset}-{n}", a.PostPage)
+		r.Get("/{board}/{id}", a.PostPage)
 		r.Get("/", a.MainPage)
 
 		r.Post("/login", a.Login)
@@ -90,7 +100,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 }
 
 func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
-	offset, err := strconv.Atoi(chi.URLParam(r, "offset"))
+	/*offset, err := strconv.Atoi(chi.URLParam(r, "offset"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -101,10 +111,19 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
+	}*/
+	pageParam := chi.URLParam(r, "page")
+	page, err := strconv.Atoi(pageParam)
+	if pageParam != "" {
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
 	}
 	board := "/" + chi.URLParam(r, "board")
 
-	req, _ := http.NewRequest("GET", API+fmt.Sprintf("%v/get-recent-%v-%v", board, offset, n), nil)
+	req, _ := http.NewRequest("GET", API+fmt.Sprintf("%v/get-recent-%v-%v", board, page*BASE_N, BASE_N), nil)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
 	rt, err := http.DefaultClient.Do(req)
 	//rt, err := http.Get(API + fmt.Sprintf("%v/get-%v-%v", board, offset, n))
@@ -133,7 +152,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	ts, err := template.New("board.html").Funcs(template.FuncMap{"StringTime": unixToString}).
+	ts, err := template.New("board.html").Funcs(template.FuncMap{"StringTime": unixToString, "IsMP4": isMP4}).
 		ParseFiles(BOARD_TMPL, PARTS_TMPL)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -175,7 +194,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 
 	new_posts := make([]P, len(posts))
 	for i, p := range posts {
-		req, _ = http.NewRequest("GET", API+fmt.Sprintf("/get-responses-%v-%v-%v/r", p.Id, 0, 3), nil)
+		req, _ = http.NewRequest("GET", API+fmt.Sprintf("%v/get-responses-%v-%v-%v/r", board, p.Id, 0, 3), nil)
 		req.Header.Add("JWT", r.Context().Value("JWT").(string))
 		rt, err = http.DefaultClient.Do(req)
 		//rt, err = http.Get(API + fmt.Sprintf("/get-responses-%v-%v-%v", id, offset, n))
@@ -204,7 +223,11 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(err.Error()))
 			return
 		}
+		for i, v := range resps {
+			resps[i].Text = template.HTML(makeResponsesLinks(string(v.Text), SITE+board+"/"+fmt.Sprint(p.Id)))
+		}
 		slices.Reverse(resps)
+		p.Text = template.HTML(html.EscapeString(string(p.Text)))
 		new_posts[i] = P{Post: p, ResponsesPosts: resps}
 	}
 
@@ -213,13 +236,14 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		Posts        []P
 		CreateAction string
 		Site         string
-		Offset       int
+		Page         int
 		User         string
 		Boards       []models.Board
+		Id           int
 	}
 
 	var t = T{Board: board, Posts: new_posts, CreateAction: API + CREATE, Site: SITE,
-		Offset: offset, User: r.Context().Value("Username").(string), Boards: boards}
+		Page: page, User: r.Context().Value("Username").(string), Boards: boards, Id: 0}
 
 	err = ts.Execute(w, t)
 	if err != nil {
@@ -230,7 +254,8 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
-	offset, err := strconv.Atoi(chi.URLParam(r, "offset"))
+	/*offset, err := strconv.Atoi(chi.URLParam(r, "offset"))
+
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -241,15 +266,17 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
-	}
+	}*/
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
+	board := chi.URLParam(r, "board")
 
-	req, _ := http.NewRequest("GET", API+fmt.Sprintf("/get-%v", id), nil)
+	req, _ := http.NewRequest("GET", API+fmt.Sprintf("/%v/get-one-%v", board, id), nil)
+	//fmt.Println(err)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
 	rt, err := http.DefaultClient.Do(req)
 	//rt, err := http.Get(API + fmt.Sprintf("/get-%v", id))
@@ -279,7 +306,9 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, _ = http.NewRequest("GET", API+fmt.Sprintf("/get-responses-%v-%v-%v", id, offset, n), nil)
+	op.Text = template.HTML(html.EscapeString(string(op.Text)))
+
+	req, _ = http.NewRequest("GET", API+fmt.Sprintf("/%v/get-responses-%v-%v-%v", board, id, 0, op.Responses), nil)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
 	rt, err = http.DefaultClient.Do(req)
 	//rt, err = http.Get(API + fmt.Sprintf("/get-responses-%v-%v-%v", id, offset, n))
@@ -309,7 +338,12 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ts, err := template.New("post.html").Funcs(template.FuncMap{"StringTime": unixToString}).ParseFiles(POSTS_TMPL, PARTS_TMPL)
+	for i, p := range posts {
+		posts[i].Text = template.HTML(makeResponsesLinks(string(p.Text), r.URL.String()))
+	}
+
+	ts, err := template.New("post.html").Funcs(template.FuncMap{"StringTime": unixToString, "IsMP4": isMP4}).
+		ParseFiles(POSTS_TMPL, PARTS_TMPL)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -325,10 +359,11 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		Board        string
 		Op           models.Post
 		User         string
+		Answer       bool
 	}
 
 	var t = T{Id: id, Posts: posts, CreateAction: API + CREATE, Site: SITE,
-		Offset: offset, Op: op, User: r.Context().Value("Username").(string)}
+		Offset: 0, Op: op, User: r.Context().Value("Username").(string), Board: "/" + board}
 
 	err = ts.Execute(w, t)
 	if err != nil {
@@ -374,7 +409,7 @@ func (pr PageRenderer) MainPage(w http.ResponseWriter, r *http.Request) {
 
 	var t = T{Boards: boards, User: r.Context().Value("Username").(string), API: API}
 
-	ts, err := template.New("main.html").Funcs(template.FuncMap{"StringTime": unixToString}).
+	ts, err := template.New("main.html").Funcs(template.FuncMap{"StringTime": unixToString, "IsMP4": isMP4}).
 		ParseFiles(MAIN_TMPl, PARTS_TMPL)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -443,7 +478,7 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{Name: "JWT", Value: tokenStr, Path: "/"})
-	http.SetCookie(w, &http.Cookie{Name: "Username", Value: user.Name, Path: "/"})
+	http.SetCookie(w, &http.Cookie{Name: "Username", Value: base64.StdEncoding.EncodeToString([]byte(user.Name)), Path: "/"})
 	http.Redirect(w, r, SITE, http.StatusFound)
 }
 
@@ -457,7 +492,8 @@ func ValidateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		if username, err := r.Cookie("Username"); err == nil && username.Path == "" {
-			ctx = context.WithValue(r.Context(), "Username", username.Value)
+			v, _ := base64.StdEncoding.DecodeString(username.Value)
+			ctx = context.WithValue(r.Context(), "Username", string(v))
 			tokenStr, _ := r.Cookie("JWT")
 			ctx = context.WithValue(ctx, "JWT", tokenStr.Value)
 		} else {
@@ -479,4 +515,29 @@ func renderFile(file string) http.HandlerFunc {
 func unixToString(u int64) string {
 	t := time.Unix(u, 0)
 	return t.Format("2006/01/02    15:04")
+}
+
+func isMP4(f string) bool {
+	if f[len(f)-4:] == ".mp4" {
+		return true
+	} else {
+		return false
+	}
+}
+
+var r = regexp.MustCompile(">>>[0-9]+")
+
+func makeResponsesLinks(s string, addr string) string {
+	var res string
+	matches := r.FindAllIndex([]byte(s), -1)
+	if len(matches) == 0 {
+		return s
+	}
+	var bs = []byte(s)
+	for _, v := range matches {
+		ms := string(bs[v[0]:v[1]])
+		res += html.EscapeString(string(bs[:v[0]])) + fmt.Sprintf("<a href=\"%v#%v\">%v</a>", addr, ms[3:], ms)
+	}
+	res += html.EscapeString(string(bs[matches[len(matches)-1][1]:]))
+	return res
 }

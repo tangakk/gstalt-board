@@ -18,12 +18,15 @@ import (
 var secret_key = []byte("да иди нахуй, ты вообще не должен был это читать")
 
 const TOKEN_VALID_TIME = 24 //сколько валиден токен в часах
-const MAX_NAME_LEN = 20     //максимальная длина имени
+const MAX_NAME_LEN = 40     //максимальная длина имени
 
 var ErrCantBeAnon = fmt.Errorf("нельзя быть аноном")
 var ErrForbiddenChars = fmt.Errorf("уберите запятую")
 
 func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
+	if postRateLimiter.RespondOnLimit(w, r, r.RemoteAddr) {
+		return
+	}
 	var user models.User
 	err := r.ParseForm()
 	if err != nil {
@@ -42,7 +45,7 @@ func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ErrBadMan.Error()))
 		return
 	}
-	user.Name = user.Name[:min(MAX_NAME_LEN, len(user.Name))]
+	user.Name = string([]rune(user.Name)[:min(MAX_NAME_LEN, len([]rune(user.Name)))])
 	if strings.Contains(user.Name, ",") {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(ErrForbiddenChars.Error()))

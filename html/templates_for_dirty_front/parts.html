@@ -9,44 +9,38 @@
             <label for="text">Текст</label>
             <textarea id="text" name="Text" style="display: block; margin: 10px;"></textarea>
 
-            <label for="data">Картинка</label>
+            <label for="data">jpeg/png/gif/mp4 (максимум 10 мб)</label>
             <input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif" style="display: block; margin: 10px;">
 
-            {{if .Board}}
             <input type="hidden" name="Board" value="{{ .Board }}">
-            {{else}}
+            {{if .Id}}
             <input type="hidden" name="ParentId" value="{{ .Id }}">
             {{end}}
             <button type="submit">Отправить</button>
         </form>
         </div>
         <div style="display: flex; justify-content: center;">
-            <iframe name="result" height="40px" ></iframe><br>
+            <iframe name="result" height="40px" scrolling="no" ></iframe><br>
         </div>
 {{end}}
 
 {{define "posts_list"}}
 {{ range $key, $post := .Posts }}
-        <div style="border-width: 2px; border-style: solid; width: fit-content;
+        <div style="border-width: 2px; border-style: solid; width: fit-content; overflow: hidden;
         {{if $post.ParentId}}
         background-color: #2fbeed;
-        {{end}}">
+        {{end}}" id="{{$post.Id}}">
             {{template "head" $post}}
             {{if $post.ParentId}}
             {{else}}
             {{if $post.Responses}}
-                <a href="/old/post/{{$post.Id}}-0-10" style="float: right; margin-left: 10px;">{{$post.Responses}} ответов</a>
+                <a href="/old{{$post.Board}}/{{$post.Id}}" style="float: right; margin-left: 10px;">{{$post.Responses}} ответов</a>
             {{else}}
-                <a href="/old/post/{{$post.Id}}-0-10" style="float: right; margin-left: 10px;">Открыть</a>
+                <a href="/old{{$post.Board}}/{{$post.Id}}" style="float: right; margin-left: 10px;">Открыть</a>
             {{end}}
             {{end}}
-            {{ if $post.Data }}
-            <div style="display: inline-block;">
-            <a href="/{{$post.Data}}" target="_blank"><img src="/{{$post.Data}}"
-            style="max-height: 200px; margin-left: 20px;"></a>
-            </div>
-            {{ end }}
-            <p style="display: inline-block; vertical-align: top;">{{ $post.Text }}</p>
+            {{template "file" $post}}
+            <p style="display: block; white-space: pre-wrap; margin-right: 10px; margin-left: 10px;">{{ $post.Text }}</p>
         </div>
         {{if $post.ParentId}}
         {{else}}
@@ -58,35 +52,28 @@
 {{end}}
 
 {{define "response"}}
-<div style="border-width: 2px; border-style: solid; background-color: #2fbeed; margin-left: 100px; width: fit-content;">
+<div style="border-width: 2px; border-style: solid; background-color: #2fbeed; margin-left: 100px; width: fit-content; overflow: hidden;"
+id="{{.Id}}">
             {{template "head" .}}
-            {{ if .Data }}
-            <div style="display: inline-block;">
-            <a href="/{{.Data}}" target="_blank"><img src="/{{.Data}}"
-            style="max-height: 200px;"></a>
-            </div>
-            {{ end }}
-            <p style="display: inline-block; vertical-align: top;">{{ .Text }}</p>
+            {{template "file" .}}
+            <p style="display: inline-block; vertical-align: top; white-space: pre-wrap; margin-right: 10px; margin-left: 10px;">{{ .Text }}</p>
 </div>
 {{end}}
 
 {{define "op"}}
-<div style="border-width: 2px; border-style: solid; border-color: gold; width: fit-content;">
+<div style="border-width: 2px; border-style: solid; border-color: gold; width: fit-content; overflow: hidden;" id="{{.Id}}">
             {{template "head" .}}
-            <div style="float: left; margin-left: 10px;">
+            <div style="float: left; margin-left: 10px;" >
             {{ if .ParentId }}
-            Ответ на <a href="/old/post/{{.ParentId}}-0-10">{{.ParentId}}</a>
+            Ответ на <a href="/old{{.Board}}/{{.ParentId}}">{{.ParentId}}</a>
             {{ else }}
-            <a href="/old{{.Board}}-0-10">{{.Board}}</a>
+            <a href="/old{{.Board}}">{{.Board}}</a>
             {{ end }}
             </div>
             <br>
             <br>
-            <p>{{ .Text }}</p>
-            {{ if .Data }}
-            <a href="/{{.Data}}" target="_blank"><img src="/{{.Data}}"
-            style="max-height: 200px;"></a>
-            {{ end }}
+            <p style="white-space: pre-wrap; margin-left: 10px; margin-right: 10px;">{{ .Text }}</p>
+            {{template "file" .}}
 </div>
 {{end}}
 
@@ -113,7 +100,7 @@
 {{define "board_list"}}
     [
     {{range .Boards}}
-        <a href="/old{{.Name}}-0-10"><b>{{.Name}}</b></a> 
+        <a href="/old{{.Name}}"><b>{{.Name}}</b></a> 
     {{end}}
     ]
 {{end}}
@@ -122,4 +109,18 @@
 <div style="background-color: #2f88ed;">
             Автор: <b style="color: red;">{{ .Author }}</b>; #{{ .Id  }} {{ StringTime .Timestamp }}
 </div>
+{{end}}
+
+{{define "file"}}
+{{ if .Data }}
+            <div style="float: left;">
+                {{if (IsMP4 .Data) }}
+                    <video src="/{{.Data}}" style="max-height: 200px; margin: 20px;"
+                    controls></video>
+                {{else}}
+                    <a href="/{{.Data}}" target="_blank"><img src="/{{.Data}}"
+                    style="max-height: 200px; margin: 20px;"></a>
+                {{end}}
+            </div>
+{{ end }}
 {{end}}

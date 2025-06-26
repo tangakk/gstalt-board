@@ -2,12 +2,13 @@ package models
 
 import (
 	"board/internal/models/boardmodes"
+	"html/template"
 )
 
 type Post struct {
 	Id           int64
 	Author       string
-	Text         string
+	Text         template.HTML
 	Timestamp    int64
 	Data         string
 	ParentId     int64
