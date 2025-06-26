@@ -118,6 +118,9 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
 			return
 		}
+		if offset < 0 {
+			offset = 0
+		}
 		to, err := strconv.Atoi(params.Get("to"))
 		if err != nil {
 			http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
@@ -168,6 +171,9 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
 		return
+	}
+	if offset < 0 {
+		offset = 0
 	}
 	to, err := strconv.Atoi(params.Get("to"))
 	if err != nil {
