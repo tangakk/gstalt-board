@@ -1,7 +1,7 @@
 {{define "send_form"}}
-        <div style="display: flex; justify-content: center;">
+        <div style="display: flex; justify-content: center;" >
         <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
-        target="result" >
+        target="result" name="Post">
             {{if .User}}{{else}}
             <label for="author">Автор</label>
             <input type="text" id="author" name="Author" style="display: block; margin: 10px;">
@@ -16,7 +16,9 @@
             {{if .Id}}
             <input type="hidden" name="ParentId" value="{{ .Id }}">
             {{end}}
+            <a href="#">
             <button type="submit">Отправить</button>
+            </a>
         </form>
         </div>
         <div style="display: flex; justify-content: center;">
@@ -30,7 +32,7 @@
         {{if $post.ParentId}}
         background-color: #2fbeed;
         {{end}}" id="{{$post.Id}}">
-            {{template "head" $post}}
+            {{template "head" .}}
             {{if $post.ParentId}}
             {{else}}
             {{if $post.Responses}}
@@ -106,8 +108,18 @@ id="{{.Id}}">
 {{end}}
 
 {{define "head"}}
+<style>
+    .id:hover {
+        color: white;
+        text-decoration: none;        
+    }
+</style>
 <div style="background-color: #2f88ed;">
-            Автор: <b style="color: red;">{{ .Author }}</b>; #{{ .Id  }} {{ StringTime .Timestamp }}
+            Автор: <b style="color: red;">{{ .Author }}</b>; <a class="id" 
+            {{if .ParentId}} 
+            href = "/old{{.Board}}/{{.ParentId}}#a{{.Id}}" {{else}} 
+            href = "/old{{.Board}}/{{.Id}}#a{{.Id}}" {{end}}
+            onclick="document.forms['Post']['Text'].value += '>>{{.Id}}\n'; document.location='#'">#{{ .Id  }}</a> {{ StringTime .Timestamp }}
 </div>
 {{end}}
 
