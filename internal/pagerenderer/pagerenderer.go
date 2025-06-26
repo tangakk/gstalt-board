@@ -223,10 +223,10 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for i, v := range resps {
-			resps[i].Text = template.HTML(makeResponsesLinks(string(v.Text), SITE+board+"/"+fmt.Sprint(p.Id)))
+			resps[i].Text = template.HTML(makeResponsesLinks(v, r))
 		}
 		//slices.Reverse(resps)
-		p.Text = template.HTML(html.EscapeString(string(p.Text)))
+		p.Text = template.HTML(makeResponsesLinks(p, r))
 		new_posts[i] = P{Post: p, ResponsesPosts: resps}
 	}
 
@@ -305,7 +305,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op.Text = template.HTML(html.EscapeString(string(op.Text)))
+	op.Text = template.HTML(makeResponsesLinks(op, r))
 
 	req, _ = http.NewRequest("GET", API+fmt.Sprintf("/%v/get-responses-%v-%v-%v", board, id, 0, op.Responses), nil)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
@@ -338,7 +338,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i, p := range posts {
-		posts[i].Text = template.HTML(makeResponsesLinks(string(p.Text), r.URL.String()))
+		posts[i].Text = template.HTML(makeResponsesLinks(p, r))
 	}
 
 	ts, err := template.New("post.html").Funcs(template.FuncMap{"StringTime": unixToString, "IsMP4": isMP4}).
@@ -524,24 +524,55 @@ func isMP4(f string) bool {
 	}
 }
 
-var r = regexp.MustCompile(">>[0-9]+")
+var reg = regexp.MustCompile(">>[0-9]+")
 
-func makeResponsesLinks(s string, addr string) string {
+func makeResponsesLinks(post models.Post, r *http.Request) string {
+	s := string(post.Text)
 	var res string
-	matches := r.FindAllIndex([]byte(s), -1)
+	matches := reg.FindAllIndex([]byte(s), -1)
+	//addr := r.URL.String()
 	if len(matches) == 0 {
 		return s
 	}
 	var bs = []byte(s)
 	for i, v := range matches {
 		ms := string(bs[v[0]:v[1]])
+		link := ms
+		if id1, _ := strconv.Atoi(ms); id1 > int(post.Id) {
+			continue
+		}
+
+		req, _ := http.NewRequest("GET", API+fmt.Sprintf("%v/get-one-%v", post.Board, ms[2:]), nil)
+		//fmt.Println(err)
+		req.Header.Add("JWT", r.Context().Value("JWT").(string))
+		rt, err := http.DefaultClient.Do(req)
+		//rt, err := http.Get(API + fmt.Sprintf("/get-%v", id))
+		if err == nil {
+			if rt.StatusCode == http.StatusOK {
+				var op models.Post
+				data, err := io.ReadAll(rt.Body)
+				if err == nil {
+					err = json.Unmarshal(data, &op)
+					if err == nil {
+						switch {
+						case op.ParentId == 0:
+							link = fmt.Sprintf("<a href=\"/old%v/%v\">%v</a>", op.Board, ms[2:], ms)
+						default:
+							link = fmt.Sprintf("<a href=\"/old%v/%v#%v\">%v</a>", op.Board, op.ParentId, ms[2:], ms)
+						}
+					}
+				}
+			}
+		}
+		//fmt.Println(req.URL)
+
 		var add string
 		if i == 0 {
 			add = string(bs[:v[0]])
 		} else {
 			add = string(bs[matches[i-1][1]:v[0]])
 		}
-		res += html.EscapeString(add) + fmt.Sprintf("<a href=\"%v#%v\">%v</a>", addr, ms[2:], ms)
+		res += html.EscapeString(add) + link
 	}
 	res += html.EscapeString(string(bs[matches[len(matches)-1][1]:]))
 	return res
