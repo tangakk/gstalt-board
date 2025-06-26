@@ -5,6 +5,9 @@
         <title>Гештальт</title>
 		<link rel="stylesheet" href="/internal/style.css">
 		<script src="/internal/script.js"></script>
+		<noscript>
+			<meta http-equiv="refresh" content="0; url=/old">
+		</noscript>
     </head>
     <body>
 		<div>
@@ -26,7 +29,7 @@
 					<a class="post-reply button center" href="">Ответить</a>
 				</div>
 			</div>
-			<form class="input" action="" method="post" enctype="multipart/form-data"
+			<form class="input" action="/create" method="post" enctype="multipart/form-data"
 			target="result">
 				<div>
 					<label for="author">Автор</label>
@@ -36,10 +39,10 @@
 					<label for="text">Текст</label>
 					<textarea id="text" name="Text"></textarea>
 					<label for="data">Картинка</label>
-					<input type="file" name="Data" id="data" accept="image/jpeg">
+					<input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif">
 				</div>
 				<div>
-					<input type="hidden" name="Board" value="{{ .Board }}">
+					<input id="form-board" type="hidden" name="Board" value="">
 					<button class="button" type="submit">Отправить</button>
 				</div>
 			</form>
