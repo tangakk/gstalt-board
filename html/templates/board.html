@@ -17,7 +17,7 @@
 			</div>
 			<div id="result" class="result reverse">
 				<div class="border message">
-					<img class="post-avatar" src="">
+					<img class="post-avatar" src="/images/nopic.jpeg">
 					<div>
 						<div class="row">
 							<h4 class="post-id">#0</h4>
@@ -29,8 +29,8 @@
 					<a class="post-reply button center" href="">Ответить</a>
 				</div>
 			</div>
-			<form class="input" action="/create" method="post" enctype="multipart/form-data"
-			target="result">
+			<form class="input" action="/api/post/post" method="post" enctype="multipart/form-data"
+			target="responce">
 				<div>
 					<label for="author">Автор</label>
 					<input type="text" id="author" name="Author">
@@ -42,7 +42,8 @@
 					<input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif">
 				</div>
 				<div>
-					<input id="form-board" type="hidden" name="Board" value="">
+					<input id="form-board" type="hidden" name="Board">
+					<iframe name="responce"></iframe>
 					<button class="button" type="submit">Отправить</button>
 				</div>
 			</form>
