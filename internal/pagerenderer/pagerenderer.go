@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -226,7 +225,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		for i, v := range resps {
 			resps[i].Text = template.HTML(makeResponsesLinks(string(v.Text), SITE+board+"/"+fmt.Sprint(p.Id)))
 		}
-		slices.Reverse(resps)
+		//slices.Reverse(resps)
 		p.Text = template.HTML(html.EscapeString(string(p.Text)))
 		new_posts[i] = P{Post: p, ResponsesPosts: resps}
 	}
@@ -242,7 +241,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		Id           int
 	}
 
-	var t = T{Board: board, Posts: new_posts, CreateAction: API + CREATE, Site: SITE,
+	var t = T{Board: board, Posts: new_posts, CreateAction: API + CREATE, Site: "boardPage",
 		Page: page, User: r.Context().Value("Username").(string), Boards: boards, Id: 0}
 
 	err = ts.Execute(w, t)
@@ -525,7 +524,7 @@ func isMP4(f string) bool {
 	}
 }
 
-var r = regexp.MustCompile(">>>[0-9]+")
+var r = regexp.MustCompile(">>[0-9]+")
 
 func makeResponsesLinks(s string, addr string) string {
 	var res string
@@ -534,9 +533,15 @@ func makeResponsesLinks(s string, addr string) string {
 		return s
 	}
 	var bs = []byte(s)
-	for _, v := range matches {
+	for i, v := range matches {
 		ms := string(bs[v[0]:v[1]])
-		res += html.EscapeString(string(bs[:v[0]])) + fmt.Sprintf("<a href=\"%v#%v\">%v</a>", addr, ms[3:], ms)
+		var add string
+		if i == 0 {
+			add = string(bs[:v[0]])
+		} else {
+			add = string(bs[matches[i-1][1]:v[0]])
+		}
+		res += html.EscapeString(add) + fmt.Sprintf("<a href=\"%v#%v\">%v</a>", addr, ms[2:], ms)
 	}
 	res += html.EscapeString(string(bs[matches[len(matches)-1][1]:]))
 	return res

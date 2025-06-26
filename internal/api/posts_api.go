@@ -55,6 +55,7 @@ func NewApi(pr *repo.Repo) *Api {
 	r.Get("/{board}/get-all-responses-{id}", a.GetAllResponses)
 
 	r.Post("/create-user", a.CreateUser)
+	r.Get("/whoami", a.GetMe)
 	r.Post("/login", a.Login)
 	r.Post("/op", a.Op)
 
@@ -412,6 +413,9 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 	reverse := chi.URLParam(r, "r") == "r"
 
 	posts, err := a.Repo.GetResponsesForPost(id, offset, n, reverse, boardS)
+	if reverse {
+		slices.Reverse(posts)
+	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

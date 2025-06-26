@@ -139,6 +139,19 @@ func (a *Api) Op(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
+func (a *Api) GetMe(w http.ResponseWriter, r *http.Request) {
+	userInCtx, _ := r.Context().Value("user").(models.User)
+	userInCtx.Pass = ""
+	var res []byte
+	res, err := json.Marshal(userInCtx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(res)
+}
+
 func parseToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return secret_key, nil
