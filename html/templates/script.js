@@ -23,7 +23,8 @@ async function rootTemplating () {
 async function boardTemplating () {
 	const path = window.location.pathname;
 	document.getElementById("board-title").innerHTML = path;
-	const result = document.getElementById("result")
+	const result = document.getElementById("result");
+	document.getElementById("form-board").setAttribute("value", path);
 	if (result.childElementCount > 0) {
 		try {
 			const template = result.children[0].cloneNode(true);

@@ -5,6 +5,9 @@
         <title>Гештальт</title>
 		<link rel="stylesheet" href="/internal/style.css">
 		<script src="/internal/script.js"></script>
+		<noscript>
+			<meta http-equiv="refresh" content="0; url=/old">
+		</noscript>
     </head>
     <body>
 		<div>
@@ -36,10 +39,10 @@
 					<label for="text">Текст</label>
 					<textarea id="text" name="Text"></textarea>
 					<label for="data">Картинка</label>
-					<input type="file" name="Data" id="data" accept="image/jpeg">
+					<input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif">
 				</div>
 				<div>
-					<input type="hidden" name="Board" value="{{ .Board }}">
+					<input id="form-board" type="hidden" name="Board" value="{{ .Board }}">
 					<button class="button" type="submit">Отправить</button>
 				</div>
 			</form>
