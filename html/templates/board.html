@@ -23,10 +23,10 @@
 							<h4 class="post-id">#0</h4>
 							<h4 class="post-author">...</h4>
 							<h4 class="post-time">00:00</h4>
+							<a class="post-reply button center" href="">Ответить</a>
 						</div>
-						<h2 class="post-text">...</h2>
+						<pre class="post-text">...</pre>
 					</div>
-					<a class="post-reply button center" href="">Ответить</a>
 				</div>
 			</div>
 			<form class="input" action="/api/post/post" method="post" enctype="multipart/form-data"
@@ -43,7 +43,7 @@
 				</div>
 				<div>
 					<input id="form-board" type="hidden" name="Board">
-					<iframe name="responce"></iframe>
+					<iframe class="hidden" name="responce"></iframe>
 					<button class="button" type="submit">Отправить</button>
 				</div>
 			</form>

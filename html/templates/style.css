@@ -85,8 +85,11 @@ body {
 		font-size: 14px;
 		height: 70px;
 	}
+	.hidden {
+		display: none;
+	}
 	a {
-		font-size: 18px;
+		font-size: 16px;
 		color: #000;
 	}
 	h1 {
@@ -102,6 +105,10 @@ body {
 		margin: 0;
 	}
 	h4 {
+		font-size: 16px;
+		margin: 0;
+	}
+	pre {
 		font-size: 16px;
 		margin: 0;
 	}
