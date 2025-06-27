@@ -24,6 +24,9 @@ body {
 	.border {
 		border: 1px solid;
 	}
+	.title {
+		margin: 20px auto;
+	}
 	.result {
 		display: flex;
 		flex-direction: column;
@@ -107,7 +110,7 @@ body {
 		margin: 0;
 	}
 	p {
-		white-space: pre;
+		white-space: pre-wrap;
 		font-size: 16px;
 		margin: 0;
 	}
