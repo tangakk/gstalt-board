@@ -53,6 +53,7 @@ func NewApi(pr *repo.Repo) *Api {
 	r.Get("/{board}/get-responses-{id}-{offset}-{n}", a.GetResponses)
 	r.Get("/{board}/get-responses-{id}-{offset}-{n}/{r}", a.GetResponses)
 	r.Get("/{board}/get-all-responses-{id}", a.GetAllResponses)
+	r.Post("/{board}/delete-{id}", a.DeletePost)
 
 	r.Post("/create-user", a.CreateUser)
 	r.Get("/whoami", a.GetMe)
@@ -471,6 +472,63 @@ func (a *Api) GetAllResponses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(resultJson)
+}
+
+var ErrCantDelete = fmt.Errorf("пост могут удалять только автор и админы")
+
+func (a *Api) DeletePost(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	boardS := "/" + chi.URLParam(r, "board")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	op, _ := a.Repo.GetPost(int64(id), boardS)
+
+	board, err := a.Repo.GetBoard(op.Board)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(ErrNoBoard.Error()))
+		return
+	}
+
+	user, ok := r.Context().Value("user").(models.User)
+	if !ok {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrCantDelete.Error()))
+		return
+	}
+	if user.Name == ANON {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrCantDelete.Error()))
+		return
+	}
+
+	canDeletePost := false
+	if user.Admin {
+		canDeletePost = true
+	}
+	if user.Name == op.Author {
+		canDeletePost = true
+	}
+	if slices.Contains(board.Admins, user.Name) {
+		canDeletePost = true
+	}
+
+	if canDeletePost {
+		err := a.Repo.DeletePost(op.Id, boardS)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		w.Write([]byte("Ok"))
+	} else {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(ErrCantDelete.Error()))
+		return
+	}
 }
 
 func userCanPostOnBoard(user models.User, board models.Board) bool {

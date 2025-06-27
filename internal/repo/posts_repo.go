@@ -304,6 +304,27 @@ func (pr *Repo) GetPost(id int64, board string) (models.Post, error) {
 	return post, nil
 }
 
+func (pr *Repo) DeletePost(id int64, board string) error {
+	parentId := 0
+	r, err := sq.Delete("\"" + board + "\"").
+		Where(sq.Eq{ID: id}).
+		Suffix("RETURNING " + PARENT).
+		PlaceholderFormat(sq.Dollar).
+		RunWith(pr.db).Query()
+	if err != nil {
+		return err
+	}
+	r.Next()
+	r.Scan(&parentId)
+	_, err = pr.db.Query(fmt.Sprint("UPDATE ", BOARDS_TABLE, " SET ", POSTSWITHR, "=", POSTSWITHR, "-1 WHERE ", NAME, "='", board, "'"))
+	if parentId != 0 {
+		pr.db.Query(fmt.Sprint("UPDATE \"", board, "\" SET ", RESPONSES, "=", RESPONSES, "-1 WHERE ", ID, "=", parentId))
+	} else {
+		_, err = pr.db.Query(fmt.Sprint("UPDATE ", BOARDS_TABLE, " SET ", POSTS, "=", POSTS, "-1 WHERE ", NAME, "='", board, "'"))
+	}
+	return err
+}
+
 /*
 func (ur *UserRepo) GetUserByID(id int) (models.User, error) {
 	user := models.User{}
