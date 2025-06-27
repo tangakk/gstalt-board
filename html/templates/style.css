@@ -18,10 +18,7 @@ body {
 		justify-content: center;
 		gap: 20px;
 	}
-	a.center {
-		margin: auto;
-	}
-	div.center > * {
+	.center {
 		margin: auto;
 	}
 	.border {
@@ -69,14 +66,15 @@ body {
 	}
 	.input {
 		display: flex;
-		flex-direction: column;
-		width: 50%;
+		flex-direction: row;
+		width: 80%;
 		gap: 10px;
 		margin: 20px auto;
 	}
 	.input > div {
 		display: flex;
 		flex-direction: column;
+		gap: 10px;
 	}
 	.input > .grow-4 {
 		flex-grow: 4;
