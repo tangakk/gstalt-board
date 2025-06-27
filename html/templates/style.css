@@ -106,7 +106,8 @@ body {
 		font-size: 16px;
 		margin: 0;
 	}
-	pre {
+	p {
+		white-space: pre;
 		font-size: 16px;
 		margin: 0;
 	}
