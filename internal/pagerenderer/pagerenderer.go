@@ -4,6 +4,7 @@ import (
 	"board/internal/models"
 	"board/internal/pagerenderer/upperapi"
 	"board/internal/repo"
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -34,7 +35,7 @@ const (
 	//API  = "http://10.147.17.74:8080"
 	SITE = "/old"
 
-	CREATE = "/create"
+	CREATE = "/old/create"
 )
 
 const (
@@ -74,6 +75,7 @@ func NewPageRenderer(pr *repo.Repo, cfg PagerendererConfig) *PageRenderer {
 		//r.Get("/post/{id}-{offset}-{n}", a.PostPage)
 		r.Get("/{board}/{id}", a.PostPage)
 		r.Get("/", a.MainPage)
+		r.Post("/create", a.Create)
 
 		r.Post("/login", a.Login)
 		r.Post("/quit", a.Quit)
@@ -252,7 +254,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		Id           int
 	}
 
-	var t = T{Board: board, Posts: new_posts, CreateAction: pr.API + CREATE, Site: "boardPage",
+	var t = T{Board: board, Posts: new_posts, CreateAction: CREATE, Site: "boardPage",
 		Page: page, User: r.Context().Value("Username").(string), Boards: boards, Id: 0}
 
 	err = ts.Execute(w, t)
@@ -372,7 +374,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		Answer       bool
 	}
 
-	var t = T{Id: id, Posts: posts, CreateAction: pr.API + CREATE, Site: SITE,
+	var t = T{Id: id, Posts: posts, CreateAction: CREATE, Site: SITE,
 		Offset: 0, Op: op, User: r.Context().Value("Username").(string), Board: "/" + board}
 
 	err = ts.Execute(w, t)
@@ -490,6 +492,34 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "JWT", Value: tokenStr, Path: "/"})
 	http.SetCookie(w, &http.Cookie{Name: "Username", Value: base64.StdEncoding.EncodeToString([]byte(user.Name)), Path: "/"})
 	http.Redirect(w, r, SITE, http.StatusFound)
+}
+
+func (pr PageRenderer) Create(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	req, err := http.NewRequest("POST", pr.API+"/create", bytes.NewReader(body))
+	req.Header = r.Header
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		data, _ := io.ReadAll(resp.Body)
+		http.Error(w, string(data), resp.StatusCode)
+		return
+	}
+	//var boards []models.Board
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(data)
 }
 
 func (pr PageRenderer) Quit(w http.ResponseWriter, r *http.Request) {

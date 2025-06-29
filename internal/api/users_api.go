@@ -178,9 +178,9 @@ func (a *Api) ValidateUser(next http.Handler) http.Handler {
 		if tokenString != "" {
 			token, err := parseToken(tokenString)
 			if err != nil || !token.Valid {
-				/*w.WriteHeader(http.StatusInternalServerError)
+				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(ErrInvalidToken.Error()))
-				return*/
+				return
 				next.ServeHTTP(w, r)
 			} else {
 				claims := token.Claims.(jwt.MapClaims)

@@ -4,11 +4,9 @@ import (
 	"board/internal/api"
 	"board/internal/pagerenderer"
 	"board/internal/repo"
-	"log"
 	"net/http"
 
 	"github.com/ilyakaznacheev/cleanenv"
-	"golang.org/x/crypto/acme/autocert"
 )
 
 func main() {
@@ -33,8 +31,8 @@ func main() {
 	}
 	a := api.NewApi(pr, a_cfg)
 	pager := pagerenderer.NewPageRenderer(pr, pr_cfg)
-	go http.ListenAndServe(a.PORT, a.Router)
 
+	go http.ListenAndServe(a.PORT, a.Router)
 	if pager.HTTPS {
 		/*go func() {
 			if err := http.ListenAndServe(pager.PORT, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +41,8 @@ func main() {
 				log.Fatalf("ListenAndServe error: %v", err)
 			}
 		}()*/
-		log.Fatal(http.Serve(autocert.NewListener(pager.DOMAIN, pager.EXTRA_DOMAIN), pager.Router))
+		//log.Fatal(http.Serve(autocert.NewListener(pager.DOMAIN, pager.EXTRA_DOMAIN), pager.Router))
+		http.ListenAndServeTLS(pager.PORT, "cert.pem", "key.pem", pager.Router)
 	} else {
 		http.ListenAndServe(pager.PORT, pager.Router)
 	}
