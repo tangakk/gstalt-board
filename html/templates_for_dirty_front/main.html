@@ -10,7 +10,7 @@
         {{range .Boards}}
         <a href="/old{{.Name}}"><b>{{.Name}}</b></a> - {{.Description}} | Постов: {{.PostsCount}} (всего {{.PostsCountWithResponses}})<br><br>
         {{end}}
-        <form action="/old/create-board" method="post" target="cbr">
+        <form action="/api/post/board" method="post" target="cbr">
             <label for="name">Имя</label>
             <input type="text" id="name" name="Name">
 

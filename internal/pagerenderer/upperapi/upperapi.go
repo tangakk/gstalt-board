@@ -28,6 +28,7 @@ func (ua *UA) UpperApi(r chi.Router) {
 	r.Get("/get/comments", ua.getComments)
 	r.Get("/whoami", ua.getMe)
 	r.Post("/post/post", ua.post)
+	r.Post("/post/board", ua.postBoard)
 }
 
 var ErrBadRequest = fmt.Errorf("херовый реквест")
@@ -227,6 +228,34 @@ func (ua *UA) post(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		http.Error(w, ErrNoResponseFromNormalApi.Error(), http.StatusInternalServerError)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		data, _ := io.ReadAll(resp.Body)
+		http.Error(w, string(data), resp.StatusCode)
+		return
+	}
+	//var boards []models.Board
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(data)
+}
+
+func (ua *UA) postBoard(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	req, err := http.NewRequest("POST", ua.NORMAL_API+"/create-board", bytes.NewReader(body))
+	req.Header = r.Header
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {

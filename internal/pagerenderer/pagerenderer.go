@@ -4,7 +4,6 @@ import (
 	"board/internal/models"
 	"board/internal/pagerenderer/upperapi"
 	"board/internal/repo"
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -75,8 +74,8 @@ func NewPageRenderer(pr *repo.Repo, cfg PagerendererConfig) *PageRenderer {
 		//r.Get("/post/{id}-{offset}-{n}", a.PostPage)
 		r.Get("/{board}/{id}", a.PostPage)
 		r.Get("/", a.MainPage)
-		r.Post("/create-board", a.CreateBoard)
-		r.Post("/post", a.CreatePost)
+		//r.Post("/create-board", a.CreateBoard)
+		//r.Post("/post", a.CreatePost)
 
 		r.Post("/login", a.Login)
 		r.Post("/quit", a.Quit)
@@ -495,35 +494,7 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, SITE, http.StatusFound)
 }
 
-func (pr PageRenderer) CreateBoard(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	req, err := http.NewRequest("POST", pr.API+"/create-board", bytes.NewReader(body))
-	req.Header = r.Header
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if resp.StatusCode != http.StatusOK {
-		data, _ := io.ReadAll(resp.Body)
-		http.Error(w, string(data), resp.StatusCode)
-		return
-	}
-	//var boards []models.Board
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Write(data)
-}
-
-func (pr PageRenderer) CreatePost(w http.ResponseWriter, r *http.Request) {
+/*func (pr PageRenderer) CreatePost(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -549,7 +520,7 @@ func (pr PageRenderer) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(data)
-}
+}*/
 
 func (pr PageRenderer) Quit(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "JWT", Value: "", MaxAge: -1, Path: "/"})
