@@ -1,6 +1,6 @@
 {{define "send_form"}}
         <div style="display: flex; justify-content: center;" >
-        <form action="{{ .CreateAction }}" method="post" enctype="multipart/form-data"
+        <form action="/old/post" method="post" enctype="multipart/form-data"
         target="result" name="Post">
             {{if .User}}{{else}}
             <label for="author">Автор</label>

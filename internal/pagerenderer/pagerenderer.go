@@ -75,7 +75,8 @@ func NewPageRenderer(pr *repo.Repo, cfg PagerendererConfig) *PageRenderer {
 		//r.Get("/post/{id}-{offset}-{n}", a.PostPage)
 		r.Get("/{board}/{id}", a.PostPage)
 		r.Get("/", a.MainPage)
-		r.Post("/create", a.Create)
+		r.Post("/create-board", a.CreateBoard)
+		r.Post("/post", a.CreatePost)
 
 		r.Post("/login", a.Login)
 		r.Post("/quit", a.Quit)
@@ -455,7 +456,7 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 	dataUrl.Add("Pass", user.Pass)
 	rt, err := http.Post(pr.API+"/login", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
 	if rt.StatusCode != http.StatusOK || err != nil {
-		rt, err := http.Post(pr.API+"/create-user", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
+		rt, err = http.Post(pr.API+"/create-user", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
 		if rt.StatusCode != http.StatusOK || err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error() + "\n" + rt.Status))
@@ -478,7 +479,7 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(data, &mp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(err.Error() + ":" + string(data)))
 		return
 	}
 
@@ -494,7 +495,35 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, SITE, http.StatusFound)
 }
 
-func (pr PageRenderer) Create(w http.ResponseWriter, r *http.Request) {
+func (pr PageRenderer) CreateBoard(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	req, err := http.NewRequest("POST", pr.API+"/create-board", bytes.NewReader(body))
+	req.Header = r.Header
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		data, _ := io.ReadAll(resp.Body)
+		http.Error(w, string(data), resp.StatusCode)
+		return
+	}
+	//var boards []models.Board
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Write(data)
+}
+
+func (pr PageRenderer) CreatePost(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
