@@ -393,15 +393,15 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op, err := a.Repo.GetPost(int64(id), boardS)
+	/*op, err := a.Repo.GetPost(int64(id), boardS)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
-	}
+	}*/
 
-	board, err := a.Repo.GetBoard(op.Board)
+	board, err := a.Repo.GetBoard(boardS)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(ErrNoBoard.Error()))

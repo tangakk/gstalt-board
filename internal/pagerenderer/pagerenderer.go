@@ -298,13 +298,13 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rt.StatusCode != http.StatusOK {
-		w.WriteHeader(rt.StatusCode)
-		w.Write([]byte(rt.Status))
-		return
-	}
-
 	var op models.Post
+	if rt.StatusCode != http.StatusOK {
+		op.Author = "[deleted]"
+		op.Board = board
+		op.Text = "[deleted]"
+		op.Timestamp = 0
+	}
 	data, err := io.ReadAll(rt.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
