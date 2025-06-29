@@ -301,7 +301,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 	var op models.Post
 	if rt.StatusCode != http.StatusOK {
 		op.Author = "[deleted]"
-		op.Board = board
+		op.Board = "/" + board
 		op.Text = "[deleted]"
 		op.Timestamp = 0
 	} else {
