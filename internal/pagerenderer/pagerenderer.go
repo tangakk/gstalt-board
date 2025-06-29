@@ -304,21 +304,21 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		op.Board = board
 		op.Text = "[deleted]"
 		op.Timestamp = 0
+	} else {
+		data, err := io.ReadAll(rt.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		err = json.Unmarshal(data, &op)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+		op.Text = template.HTML(makeResponsesLinks(op, r, pr.API))
 	}
-	data, err := io.ReadAll(rt.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	err = json.Unmarshal(data, &op)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	op.Text = template.HTML(makeResponsesLinks(op, r, pr.API))
 
 	req, _ = http.NewRequest("GET", pr.API+fmt.Sprintf("/%v/get-responses-%v-%v-%v", board, id, 0, op.Responses), nil)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
@@ -337,7 +337,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var posts []models.Post = make([]models.Post, 0)
-	data, err = io.ReadAll(rt.Body)
+	data, err := io.ReadAll(rt.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
