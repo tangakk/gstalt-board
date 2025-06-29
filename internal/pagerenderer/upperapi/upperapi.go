@@ -14,21 +14,27 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const NORMAL_API = "http://localhost:8080"
+type UpperApiConfig struct {
+	NORMAL_API string `env:"UPPERAPI_NORMAL_API_ADDR" env-default:"http://localhost:8080"`
+}
 
-func UpperApi(r chi.Router) {
-	r.Get("/get/boards", getBoards)
-	r.Get("/get/posts", getPosts)
-	r.Get("/get/comments", getComments)
-	r.Get("/whoami", getMe)
-	r.Post("/post/post", post)
+type UA struct {
+	UpperApiConfig
+}
+
+func (ua *UA) UpperApi(r chi.Router) {
+	r.Get("/get/boards", ua.getBoards)
+	r.Get("/get/posts", ua.getPosts)
+	r.Get("/get/comments", ua.getComments)
+	r.Get("/whoami", ua.getMe)
+	r.Post("/post/post", ua.post)
 }
 
 var ErrBadRequest = fmt.Errorf("херовый реквест")
 var ErrNoResponseFromNormalApi = fmt.Errorf("нормальное api не отвечает")
 
-func getBoards(w http.ResponseWriter, r *http.Request) {
-	req, err := http.NewRequest("GET", NORMAL_API+"/get-boards", nil)
+func (ua *UA) getBoards(w http.ResponseWriter, r *http.Request) {
+	req, err := http.NewRequest("GET", ua.NORMAL_API+"/get-boards", nil)
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
 		return
@@ -75,8 +81,8 @@ func getBoards(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func getMe(w http.ResponseWriter, r *http.Request) {
-	req, err := http.NewRequest("GET", NORMAL_API+"/whoami", nil)
+func (ua *UA) getMe(w http.ResponseWriter, r *http.Request) {
+	req, err := http.NewRequest("GET", ua.NORMAL_API+"/whoami", nil)
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
 		return
@@ -102,7 +108,7 @@ func getMe(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func getPosts(w http.ResponseWriter, r *http.Request) {
+func (ua *UA) getPosts(w http.ResponseWriter, r *http.Request) {
 	params, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
@@ -111,7 +117,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	board := params.Get("board")
 	var req *http.Request
 	if params.Get("from") == "" {
-		req, err = http.NewRequest("GET", NORMAL_API+"/"+board+"/get-all", nil)
+		req, err = http.NewRequest("GET", ua.NORMAL_API+"/"+board+"/get-all", nil)
 	} else {
 		offset, err := strconv.Atoi(params.Get("from"))
 		if err != nil {
@@ -130,7 +136,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 		if params.Get("last") == "1" {
 			n = -n
 		}
-		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-%v-%v", NORMAL_API, board, offset, -n), nil)
+		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-%v-%v", ua.NORMAL_API, board, offset, -n), nil)
 	}
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
@@ -160,7 +166,7 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func getComments(w http.ResponseWriter, r *http.Request) {
+func (ua *UA) getComments(w http.ResponseWriter, r *http.Request) {
 	params, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
@@ -188,9 +194,9 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	board := params.Get("board")
 	n := to - offset
 	if params.Get("last") != "1" {
-		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-responses-%v-%v-%v", NORMAL_API, board, id, offset, n), nil)
+		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-responses-%v-%v-%v", ua.NORMAL_API, board, id, offset, n), nil)
 	} else {
-		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-responses-%v-%v-%v/r", NORMAL_API, board, id, offset, n), nil)
+		req, err = http.NewRequest("GET", fmt.Sprintf("%v/%v/get-responses-%v-%v-%v/r", ua.NORMAL_API, board, id, offset, n), nil)
 	}
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
@@ -210,13 +216,13 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func post(w http.ResponseWriter, r *http.Request) {
+func (ua *UA) post(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)
 		return
 	}
-	req, err := http.NewRequest("POST", NORMAL_API+"/create", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", ua.NORMAL_API+"/create", bytes.NewReader(body))
 	req.Header = r.Header
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

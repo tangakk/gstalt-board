@@ -42,7 +42,7 @@ type RepoConfig struct {
 	Port     string `env:"POSTGRES_PORT" env-default:"5432"`
 	DbName   string `env:"POSTGRES_DB" env-default:"db"`
 
-	MaxPostsSelect int `env:"MAX_POSTS" env-default:"100"`
+	MaxPostsSelect int `env:"MAX_POSTS_SELECT" env-default:"100"`
 }
 
 type Repo struct {

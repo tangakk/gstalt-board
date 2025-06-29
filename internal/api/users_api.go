@@ -40,7 +40,7 @@ func (a *Api) CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	if user.Name == ANON {
+	if user.Name == a.ANON {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(ErrBadMan.Error()))
 		return
@@ -178,10 +178,10 @@ func (a *Api) ValidateUser(next http.Handler) http.Handler {
 		if tokenString != "" {
 			token, err := parseToken(tokenString)
 			if err != nil || !token.Valid {
-				w.WriteHeader(http.StatusInternalServerError)
+				/*w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(ErrInvalidToken.Error()))
-				return
-				//next.ServeHTTP(w, r)
+				return*/
+				next.ServeHTTP(w, r)
 			} else {
 				claims := token.Claims.(jwt.MapClaims)
 				name, ok := claims["name"].(string)

@@ -31,7 +31,7 @@ const (
 )
 
 const (
-	API  = "http://10.147.17.74:8080"
+	//API  = "http://10.147.17.74:8080"
 	SITE = "/old"
 
 	CREATE = "/create"
@@ -41,14 +41,24 @@ const (
 	BASE_N = 20
 )
 
-type PageRenderer struct {
-	Router *chi.Mux
+type PagerendererConfig struct {
+	API          string `env:"PAGERENDERER_API" env-default:"http://localhost:8080"`
+	BASE_N       int    `env:"PAGERENDERER_POSTS_PER_PAGE" env-default:"20"`
+	PORT         string `env:"PAGERENDERER_PORT" env-default:":8081"`
+	DOMAIN       string `env:"DOMAIN" env-default:"gstalch.ru"`
+	EXTRA_DOMAIN string `env:"EXTRA_DOMAIN" env-default:"gstalch.ru"`
+	HTTPS        bool   `env:"HTTPS" env-default:"false"`
 }
 
-func NewPageRenderer(pr *repo.Repo) *PageRenderer {
+type PageRenderer struct {
+	Router *chi.Mux
+	PagerendererConfig
+}
+
+func NewPageRenderer(pr *repo.Repo, cfg PagerendererConfig) *PageRenderer {
 	r := chi.NewRouter()
 
-	a := &PageRenderer{Router: r}
+	a := &PageRenderer{Router: r, PagerendererConfig: cfg}
 
 	r.Use(ValidateUser)
 
@@ -68,8 +78,9 @@ func NewPageRenderer(pr *repo.Repo) *PageRenderer {
 		r.Post("/login", a.Login)
 		r.Post("/quit", a.Quit)
 	})
+	ua := upperapi.UA{UpperApiConfig: upperapi.UpperApiConfig{NORMAL_API: a.API}}
 
-	r.Route("/api", upperapi.UpperApi)
+	r.Route("/api", ua.UpperApi)
 
 	FileServer(r, "/images", http.Dir("./images"))
 	FileServer(r, "/internal", http.Dir("./html/templates"))
@@ -122,7 +133,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 	}
 	board := "/" + chi.URLParam(r, "board")
 
-	req, _ := http.NewRequest("GET", API+fmt.Sprintf("%v/get-recent-%v-%v", board, page*BASE_N, BASE_N), nil)
+	req, _ := http.NewRequest("GET", pr.API+fmt.Sprintf("%v/get-recent-%v-%v", board, page*BASE_N, BASE_N), nil)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
 	rt, err := http.DefaultClient.Do(req)
 	//rt, err := http.Get(API + fmt.Sprintf("%v/get-%v-%v", board, offset, n))
@@ -159,7 +170,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rt, err = http.Get(API + "/get-boards")
+	rt, err = http.Get(pr.API + "/get-boards")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -193,7 +204,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 
 	new_posts := make([]P, len(posts))
 	for i, p := range posts {
-		req, _ = http.NewRequest("GET", API+fmt.Sprintf("%v/get-responses-%v-%v-%v/r", board, p.Id, 0, 3), nil)
+		req, _ = http.NewRequest("GET", pr.API+fmt.Sprintf("%v/get-responses-%v-%v-%v/r", board, p.Id, 0, 3), nil)
 		req.Header.Add("JWT", r.Context().Value("JWT").(string))
 		rt, err = http.DefaultClient.Do(req)
 		//rt, err = http.Get(API + fmt.Sprintf("/get-responses-%v-%v-%v", id, offset, n))
@@ -223,10 +234,10 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for i, v := range resps {
-			resps[i].Text = template.HTML(makeResponsesLinks(v, r))
+			resps[i].Text = template.HTML(makeResponsesLinks(v, r, pr.API))
 		}
 		//slices.Reverse(resps)
-		p.Text = template.HTML(makeResponsesLinks(p, r))
+		p.Text = template.HTML(makeResponsesLinks(p, r, pr.API))
 		new_posts[i] = P{Post: p, ResponsesPosts: resps}
 	}
 
@@ -241,7 +252,7 @@ func (pr PageRenderer) BoardPage(w http.ResponseWriter, r *http.Request) {
 		Id           int
 	}
 
-	var t = T{Board: board, Posts: new_posts, CreateAction: API + CREATE, Site: "boardPage",
+	var t = T{Board: board, Posts: new_posts, CreateAction: pr.API + CREATE, Site: "boardPage",
 		Page: page, User: r.Context().Value("Username").(string), Boards: boards, Id: 0}
 
 	err = ts.Execute(w, t)
@@ -274,7 +285,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 	}
 	board := chi.URLParam(r, "board")
 
-	req, _ := http.NewRequest("GET", API+fmt.Sprintf("/%v/get-one-%v", board, id), nil)
+	req, _ := http.NewRequest("GET", pr.API+fmt.Sprintf("/%v/get-one-%v", board, id), nil)
 	//fmt.Println(err)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
 	rt, err := http.DefaultClient.Do(req)
@@ -305,9 +316,9 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	op.Text = template.HTML(makeResponsesLinks(op, r))
+	op.Text = template.HTML(makeResponsesLinks(op, r, pr.API))
 
-	req, _ = http.NewRequest("GET", API+fmt.Sprintf("/%v/get-responses-%v-%v-%v", board, id, 0, op.Responses), nil)
+	req, _ = http.NewRequest("GET", pr.API+fmt.Sprintf("/%v/get-responses-%v-%v-%v", board, id, 0, op.Responses), nil)
 	req.Header.Add("JWT", r.Context().Value("JWT").(string))
 	rt, err = http.DefaultClient.Do(req)
 	//rt, err = http.Get(API + fmt.Sprintf("/get-responses-%v-%v-%v", id, offset, n))
@@ -338,7 +349,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i, p := range posts {
-		posts[i].Text = template.HTML(makeResponsesLinks(p, r))
+		posts[i].Text = template.HTML(makeResponsesLinks(p, r, pr.API))
 	}
 
 	ts, err := template.New("post.html").Funcs(template.FuncMap{"StringTime": unixToString, "IsMP4": isMP4}).
@@ -361,7 +372,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		Answer       bool
 	}
 
-	var t = T{Id: id, Posts: posts, CreateAction: API + CREATE, Site: SITE,
+	var t = T{Id: id, Posts: posts, CreateAction: pr.API + CREATE, Site: SITE,
 		Offset: 0, Op: op, User: r.Context().Value("Username").(string), Board: "/" + board}
 
 	err = ts.Execute(w, t)
@@ -373,7 +384,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pr PageRenderer) MainPage(w http.ResponseWriter, r *http.Request) {
-	rt, err := http.Get(API + "/get-boards")
+	rt, err := http.Get(pr.API + "/get-boards")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -406,7 +417,7 @@ func (pr PageRenderer) MainPage(w http.ResponseWriter, r *http.Request) {
 		API    string
 	}
 
-	var t = T{Boards: boards, User: r.Context().Value("Username").(string), API: API}
+	var t = T{Boards: boards, User: r.Context().Value("Username").(string), API: pr.API}
 
 	ts, err := template.New("main.html").Funcs(template.FuncMap{"StringTime": unixToString, "IsMP4": isMP4}).
 		ParseFiles(MAIN_TMPl, PARTS_TMPL)
@@ -440,15 +451,15 @@ func (pr PageRenderer) Login(w http.ResponseWriter, r *http.Request) {
 	dataUrl := url.Values{}
 	dataUrl.Add("Name", user.Name)
 	dataUrl.Add("Pass", user.Pass)
-	rt, err := http.Post(API+"/login", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
+	rt, err := http.Post(pr.API+"/login", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
 	if rt.StatusCode != http.StatusOK || err != nil {
-		rt, err := http.Post(API+"/create-user", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
+		rt, err := http.Post(pr.API+"/create-user", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
 		if rt.StatusCode != http.StatusOK || err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error() + "\n" + rt.Status))
 			return
 		}
-		rt, err = http.Post(API+"/login", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
+		rt, err = http.Post(pr.API+"/login", "application/x-www-form-urlencoded", strings.NewReader(dataUrl.Encode()))
 		if rt.StatusCode != http.StatusOK || err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error() + "\n" + rt.Status))
@@ -526,7 +537,7 @@ func isMP4(f string) bool {
 
 var reg = regexp.MustCompile(">>[0-9]+")
 
-func makeResponsesLinks(post models.Post, r *http.Request) string {
+func makeResponsesLinks(post models.Post, r *http.Request, API string) string {
 	s := string(post.Text)
 	var res string
 	matches := reg.FindAllIndex([]byte(s), -1)

@@ -19,14 +19,15 @@ import (
 	"github.com/gorilla/schema"
 )
 
-const (
+/*const (
 	MAX_MULTIPART_SIZE = 10485760
 	ANON               = "Аноним"
-)
+)*/
 
 type Api struct {
 	Router *chi.Mux
 	Repo   *repo.Repo
+	ApiConfig
 }
 
 var postRateLimiter = httprate.NewRateLimiter(1, 10*time.Second, httprate.WithLimitHandler(
@@ -36,10 +37,16 @@ var postRateLimiter = httprate.NewRateLimiter(1, 10*time.Second, httprate.WithLi
 	},
 ))
 
-func NewApi(pr *repo.Repo) *Api {
+type ApiConfig struct {
+	PORT               string `env:"NORMAL_API_PORT" env-default:":8080"`
+	MAX_MULTIPART_SIZE int64  `env:"MAX_MULTIPART_SIZE" env-default:"10485760"`
+	ANON               string `env:"ANON_NAME" env-default:"Аноним"`
+}
+
+func NewApi(pr *repo.Repo, cfg ApiConfig) *Api {
 	r := chi.NewRouter()
 
-	a := &Api{Router: r, Repo: pr}
+	a := &Api{Router: r, Repo: pr, ApiConfig: cfg}
 
 	r.Use(a.ValidateUser)
 
@@ -79,8 +86,8 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var post models.Post
-	r.Body = http.MaxBytesReader(w, r.Body, MAX_MULTIPART_SIZE)
-	err := r.ParseMultipartForm(MAX_MULTIPART_SIZE)
+	r.Body = http.MaxBytesReader(w, r.Body, a.MAX_MULTIPART_SIZE)
+	err := r.ParseMultipartForm(a.MAX_MULTIPART_SIZE)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -99,7 +106,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if post.Author == "" {
-		post.Author = ANON
+		post.Author = a.ANON
 	}
 	post.Author = string([]rune(post.Author)[:min(MAX_NAME_LEN, len([]rune(post.Author)))])
 	if strings.Contains(post.Author, ",") {
@@ -153,7 +160,7 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(ErrBadMan.Error()))
 			return
 		} else {
-			user.Name = ANON
+			user.Name = a.ANON
 		}
 	}
 
@@ -204,7 +211,7 @@ func (a *Api) GetNPosts(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value("user").(models.User)
 	if !ok {
-		user.Name = ANON
+		user.Name = a.ANON
 	}
 	if !userCanReadBoard(user, board) {
 		w.WriteHeader(http.StatusForbidden)
@@ -257,7 +264,7 @@ func (a *Api) GetRecent(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value("user").(models.User)
 	if !ok {
-		user.Name = ANON
+		user.Name = a.ANON
 	}
 	if !userCanReadBoard(user, board) {
 		w.WriteHeader(http.StatusForbidden)
@@ -298,7 +305,7 @@ func (a *Api) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value("user").(models.User)
 	if !ok {
-		user.Name = ANON
+		user.Name = a.ANON
 	}
 	if !userCanReadBoard(user, board) {
 		w.WriteHeader(http.StatusForbidden)
@@ -348,7 +355,7 @@ func (a *Api) GetPost(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value("user").(models.User)
 	if !ok {
-		user.Name = ANON
+		user.Name = a.ANON
 	}
 	if !userCanReadBoard(user, board) {
 		w.WriteHeader(http.StatusForbidden)
@@ -403,7 +410,7 @@ func (a *Api) GetResponses(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value("user").(models.User)
 	if !ok {
-		user.Name = ANON
+		user.Name = a.ANON
 	}
 	if !userCanReadBoard(user, board) {
 		w.WriteHeader(http.StatusForbidden)
@@ -451,7 +458,7 @@ func (a *Api) GetAllResponses(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value("user").(models.User)
 	if !ok {
-		user.Name = ANON
+		user.Name = a.ANON
 	}
 	if !userCanReadBoard(user, board) {
 		w.WriteHeader(http.StatusForbidden)
@@ -499,7 +506,7 @@ func (a *Api) DeletePost(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(ErrCantDelete.Error()))
 		return
 	}
-	if user.Name == ANON {
+	if user.Name == a.ANON {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(ErrCantDelete.Error()))
 		return
