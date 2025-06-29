@@ -30,7 +30,7 @@ type Api struct {
 	ApiConfig
 }
 
-var postRateLimiter = httprate.NewRateLimiter(1, 10*time.Second, httprate.WithLimitHandler(
+var postRateLimiter = httprate.NewRateLimiter(10, time.Second, httprate.WithLimitHandler(
 	func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTooManyRequests)
 		w.Write([]byte("вы постите слишком часто"))
