@@ -82,9 +82,9 @@ var ErrNoBoard = fmt.Errorf("такой доски не существует")
 var ErrCantPost = fmt.Errorf("вы не можете постить на этой доске")
 
 func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
-	if postRateLimiter.RespondOnLimit(w, r, r.RemoteAddr) {
+	/*if postRateLimiter.RespondOnLimit(w, r, r.RemoteAddr) {
 		return
-	}
+	}*/
 	var post models.Post
 	r.Body = http.MaxBytesReader(w, r.Body, a.MAX_MULTIPART_SIZE)
 	err := r.ParseMultipartForm(a.MAX_MULTIPART_SIZE)
