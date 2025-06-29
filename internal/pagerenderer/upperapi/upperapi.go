@@ -10,8 +10,10 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/httprate"
 )
 
 type UpperApiConfig struct {
@@ -217,7 +219,17 @@ func (ua *UA) getComments(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+var postRateLimiter = httprate.NewRateLimiter(1, 5*time.Second, httprate.WithLimitHandler(
+	func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		w.Write([]byte("вы постите слишком часто"))
+	},
+))
+
 func (ua *UA) post(w http.ResponseWriter, r *http.Request) {
+	if postRateLimiter.RespondOnLimit(w, r, r.RemoteAddr) {
+		return
+	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, ErrBadRequest.Error(), http.StatusInternalServerError)

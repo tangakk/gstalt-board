@@ -30,7 +30,7 @@ type Api struct {
 	ApiConfig
 }
 
-var postRateLimiter = httprate.NewRateLimiter(10, time.Second, httprate.WithLimitHandler(
+var postRateLimiter = httprate.NewRateLimiter(1, 3*time.Second, httprate.WithLimitHandler(
 	func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTooManyRequests)
 		w.Write([]byte("вы постите слишком часто"))
@@ -82,7 +82,8 @@ var ErrNoBoard = fmt.Errorf("такой доски не существует")
 var ErrCantPost = fmt.Errorf("вы не можете постить на этой доске")
 
 func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
-	/*if postRateLimiter.RespondOnLimit(w, r, r.RemoteAddr) {
+	user, _ := r.Context().Value("user").(models.User)
+	/*if postRateLimiter.RespondOnLimit(w, r, user.Name) {
 		return
 	}*/
 	var post models.Post
@@ -148,7 +149,6 @@ func (a *Api) CreatePost(w http.ResponseWriter, r *http.Request) {
 		post.Board = op.Board
 		//w.Write([]byte("Установлена доска " + op.Board + "\n"))
 	}
-	user, _ := r.Context().Value("user").(models.User)
 
 	if user.Name != "" {
 		post.Author = user.Name
