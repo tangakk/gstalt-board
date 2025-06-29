@@ -1,0 +1,17 @@
+[Unit]
+Description=Gstalt board
+After=network.target
+After=postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory={{ ПУТЬ ДО ПРОЕКТА }}
+
+User=gstalt
+Group=gstalt
+
+ExecStart=/usr/bin/go run cmd/app/main.go
+
+[Install]
+WantedBy=multi-user.target
