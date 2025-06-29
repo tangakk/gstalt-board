@@ -4,6 +4,7 @@ import (
 	"board/internal/api"
 	"board/internal/pagerenderer"
 	"board/internal/repo"
+	"fmt"
 	"net/http"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -15,20 +16,21 @@ func main() {
 	pr_cfg := pagerenderer.PagerendererConfig{}
 	err := cleanenv.ReadConfig("config.env", &r_cfg)
 	if err != nil {
-		cleanenv.ReadEnv(r_cfg)
+		panic(err)
 	}
 	err = cleanenv.ReadConfig("config.env", &a_cfg)
 	if err != nil {
-		cleanenv.ReadEnv(r_cfg)
+		panic(err)
 	}
 	err = cleanenv.ReadConfig("config.env", &pr_cfg)
 	if err != nil {
-		cleanenv.ReadEnv(r_cfg)
+		panic(err)
 	}
 	pr, err := repo.NewPostsRepo(r_cfg)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("КОНФИГИ:\nrepo:%v\napi:%v\npager:%v", r_cfg, a_cfg, pr_cfg)
 	a := api.NewApi(pr, a_cfg)
 	pager := pagerenderer.NewPageRenderer(pr, pr_cfg)
 
