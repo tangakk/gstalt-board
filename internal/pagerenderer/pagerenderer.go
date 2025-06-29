@@ -304,6 +304,7 @@ func (pr PageRenderer) PostPage(w http.ResponseWriter, r *http.Request) {
 		op.Board = "/" + board
 		op.Text = "[deleted]"
 		op.Timestamp = 0
+		op.Responses = 10000
 	} else {
 		data, err := io.ReadAll(rt.Body)
 		if err != nil {
