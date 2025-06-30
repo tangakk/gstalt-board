@@ -12,6 +12,28 @@ body > div {
 	display: flex;
 	flex-direction: column;
 }
+.button {
+	background-color: #ffffff;
+	border: 1px solid;
+	box-shadow: 1px 2px;
+	user-select: none;
+	padding: 2px;
+}
+.button:hover {
+	background-color: #e6e6e6;
+}
+.button:active {
+	box-shadow: 0px 0px;
+	transform: translate(1px, 2px);
+}
+.field {
+	text-align: center;
+	background-color: #ffffff;
+	border: 1px solid;
+	box-shadow: 1px 2px;
+	user-select: none;
+	padding: 2px;
+}
 .title {
 	display: flex;
 	flex-direction: row;
@@ -32,6 +54,7 @@ body > div {
 .w150 {
 	width: 150px;
 }
+.h
 .gap2 {
 	gap: 2px;
 }
@@ -72,17 +95,6 @@ body > div {
 .flex-column {
 	display: flex;
 	flex-direction: column;
-}
-.button {
-	user-select: none;
-	background-color: #ffffff;
-}
-.button:hover {
-	background-color: #e6e6e6;
-}
-.button:active.border.shadow {
-	box-shadow: 0px 0px;
-	transform: translate(1px, 2px);
 }
 .milli-icon {
 	width: 80px;
