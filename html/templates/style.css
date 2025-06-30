@@ -32,6 +32,9 @@ body > div {
 .w150 {
 	width: 150px;
 }
+.gap2 {
+	gap: 2px;
+}
 .gap5 {
 	gap: 5px;
 }
@@ -50,8 +53,8 @@ body > div {
 .m-top {
 	margin: 0 auto 0 auto;
 }
-.space-bottom {
-	margin: 0 0 10px 0;
+.space {
+	margin: 5px;
 }
 .justify {
 	justify-content: center;
@@ -103,6 +106,9 @@ body > div {
 }
 summary {
 	user-select: none;
+}
+input {
+	outline: none;
 }
 h1 {
 	font-size: 3em;
