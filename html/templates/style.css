@@ -54,7 +54,9 @@ body > div {
 .w150 {
 	width: 150px;
 }
-.h
+.h-fit {
+	height: fit-content;
+}
 .gap2 {
 	gap: 2px;
 }
