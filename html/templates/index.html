@@ -2,25 +2,64 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Гештальт</title>
-		<link rel="stylesheet" href="/internal/style.css">
-		<script src="/internal/script.js"></script>
-		<noscript>
-			<meta http-equiv="refresh" content="0; url=/old">
-		</noscript>
+        <title>Гештальч!</title>
+		<!-- <link rel="stylesheet" href="/internal/style.css"> -->
+		<link rel="stylesheet" href="style.css">
     </head>
     <body>
+		<div class="title">
+			<div class="flex1"></div>
+			<div class="center text-center flex1"><h1>Гештальч!</h1></div>
+			<div class="flex1 flex-row">
+				<div class="flex1"></div>
+				{{if .Registred}}
+				<div class="w250">
+					<fieldset class="flex-row gap10 pad10">
+						<legend>| Авторизован |</legend>
+						<div class="text-center m-top flex-column justify gap5">
+							<p>{{.Username}}</p>
+							<details class="w150">
+								<summary class="space-bottom button border shadow pad2 text-center flex-column">Редактировать данные</summary>
+								<form class="border shadow flex-column gap5 pad10" action="/api/edit-profile">
+									<p>Никнейм</p>
+									<input class="border shadow pad2 text-center" name="Name">
+									<label for="change-avatar" class="button border shadow pad2 text-center">Выбрать Аватар</label>
+									<input id="change-avatar" class="hidden" type="file" name="file">
+									<input class="button border shadow pad2 text-center" type="submit" value="Ввод">
+								</form>
+							</details>
+							<a class="button border shadow pad2 text-center" href="/api/logout">Выйти</a>
+						</div>
+						<img class="m-top mini-icon" src="{{.Avatar}}">
+					</fieldset>
+				</div>
+				{{else}}
+				<form class="w250" action="/api/login">
+					<fieldset class="flex-column gap5 pad10">
+						<legend>| Вход | Регистрация |</legend>
+						<div class="center flex-column gap5 w150">
+							<p>Логин</p>
+							<input class="border shadow pad2 text-center" name="Name">
+							<p>Пароль</p>
+							<input class="border shadow pad2 text-center" type="password" name="Pass">
+							<input class="button border shadow pad2 text-center" type="submit" value="Ввод">
+						</div>
+					</fieldset>
+				</form>
+				{{end}}
+			</div>
+		</div>
 		<div>
-			<div class="center title"><h1>Гештальт Борда</h1></div>
-			<div id="result" class="result">
-				<a class="border message">
-					<img class="board-img" src="/images/nopic.jpeg">
-					<div>
-						<h2 class="board-name">/...</h2>
-						<h3 class="board-desc">...</h3>
+			<div class="button center w1000 border shadow">
+				<a href="" class="flex-row gap10 pad10">
+					<img class="mini-icon" src="/images/nopic.jpeg">
+					<div class="board-namedesc">
+						<h2>/blank_name</h2>
+						<h3 class="pre">blank_desc</h3>
 					</div>
 				</a>
 			</div>
 		</div>
+		<div></div>
     </body>
 </html>
