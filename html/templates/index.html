@@ -6,37 +6,40 @@
 		<link rel="stylesheet" href="/internal/style.css">
     </head>
     <body>
-		<div class="title">
-			<div class="flex1"></div>
-			<div class="center text-center flex1"><h1>Гештальч!</h1></div>
-			<div class="flex1 flex-row">
-				<div class="flex1"></div>
+		<div class="flex-row padding flex-span-all" style="--padding: 20px;">
+			<div></div>
+			<div class="center div text"><h1>Гештальч!</h1></div>
+			<div class="flex-row flex-span-all">
+				<div></div>
 				{{if .IsRegistered}}
-				<div class="w250">
-					<fieldset class="flex-row gap10 pad10">
+				<div class="width flex-span" style="--width: 250px; --flex-span: 2;">
+					<fieldset class="flex-row gap padding" style="--gap: 10px; --padding: 10px;">
 						<legend>| Авторизован |</legend>
-						<div class="text-center m-top flex-column justify gap5">
+						<div class="center text width flex-column gap margin" style="--width: 150px; --gap: 5px; --margin: 0 auto;">
 							<p>{{.Username}}</p>
-							<details class="w150">
-								<summary class="button flex-column">Редактировать</summary>
-								<form class="space border shadow flex-column gap5 pad10" action="/api/edit-profile">
-									<p>Никнейм</p>
-									<input class="field" name="Name">
-									<label for="user-change-img" class="button border shadow pad2 text-center">Выбрать Аватар</label>
-									<input id="user-change-img" class="hidden" type="file" name="file">
-									<input class="button" type="submit" value="Ввод">
-								</form>
-							</details>
+							<label for="user-edit" class="button">Редактировать</label>
+							<input id="user-edit" type="checkbox" class="hidden hide-next">
+							<form class="border shadow flex-column hide-this gap margin padding"
+							style="--gap: 5px; --margin: 5px; --padding: 10px;"
+							action="/api/edit-profile">
+								<p>Никнейм</p>
+								<input class="field" name="Name">
+								<label for="user-change-img"
+								class="center text button border shadow padding"
+								style="--padding: 2px;">Выбрать Аватар</label>
+								<input id="user-change-img" class="hidden" type="file" name="file">
+								<input class="button" type="submit" value="Ввод">
+							</form>
 							<a class="button" href="/api/logout">Выйти</a>
 						</div>
-						<img class="m-top milli-icon" src="{{.Avatar}}">
+						<img class="img margin" style="--img-size: 80px; --margin: 0 auto;" src="{{.Avatar}}">
 					</fieldset>
 				</div>
 				{{else}}
-				<form class="w250" action="/api/login">
-					<fieldset class="flex-column gap5 pad10">
-						<legend>| Вход | Регистрация |</legend>
-						<div class="center flex-column gap5 w150">
+				<form class="width flex-span" style="--width: 200px; --flex-span: 2;" action="/api/login">
+					<fieldset class="flex-row gap padding" style="--gap: 10px; --padding: 10px;">
+						<legend>| Вход / Регистрация |</legend>
+						<div class="center text width flex-column gap margin" style="--width: 150px; --gap: 5px; --margin: 0 auto;">
 							<p>Логин</p>
 							<input class="field" name="Name">
 							<p>Пароль</p>
