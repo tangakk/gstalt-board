@@ -71,30 +71,28 @@
 						<div class="flex-column" style="gap: 5px;">
 							<label for="board-edit" class="button center text" style="width: 200px;">Редактировать</label>
 							<input id="board-edit" type="checkbox" class="hidden hide-next">
-							<form class="border shadow flex-column hide-this" style="gap: 5px; padding: 5px;" action="/api/edit-profile">
-								<div class="center text" style="width: 90%;">
+							<form class="border shadow flex-column hide-this" style="gap: 10px; padding: 5px;" action="/api/edit-profile">
+								<div class="center div text" style="width: 90%;">
 									<p>Наименование</p>
 									<input class="field" name="Name">
 								</div>
-								<div class="center text" style="width: 90%;">
+								<div class="center div text" style="width: 90%;">
 									<p>Описание</p>
 									<input class="field" name="Description">
 								</div>
-								<label for="board-change-img" class="center text button border shadow" style="width: 90%;">Выбрать Изображение</label>
+								<label for="board-change-img" class="center div text button border shadow" style="width: 90%;">Выбрать Изображение</label>
 								<input id="board-change-img" class="hidden" type="file" name="file">
-								<div class="center div text flex-row" style="width: 90%;">
-									<label for="private-checkbox" class="button">Включить приват</label>
-								</div>
+								<label for="private-checkbox" class="button center div text" style="width: 90%;">Приват</label>
 								<input id="private-checkbox" type="checkbox" class="hidden hide-next" name="Private">
-								<div class="center text flex-column hide-this" style="width: 90%;">
+								<div class="center div text flex-column hide-this" style="width: 90%;">
 									<p>Приват включен</p>
 									<p>Пользователи привата</p>
 									<input class="field" name="AllowUsers">
 								</div>
-								<div class="center text flex-column unhide-this" style="width: 90%;">
+								<div class="center div text flex-column unhide-this" style="width: 90%;">
 									<p>Приват отключен</p>
 								</div>
-								<input class="center text button" style="width: 90%;" type="submit" value="Применить">
+								<input class="center div text button" style="width: 90%;" type="submit" value="Применить">
 							</form>
 						</div>
 						<div class="button center text" style="width: 150px;">Удалить</div>
