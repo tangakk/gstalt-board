@@ -27,7 +27,6 @@ body > div {
 	transform: translate(1px, 2px);
 }
 .field {
-	text-align: center;
 	background-color: #ffffff;
 	border: 1px solid;
 	box-shadow: 1px 2px;
@@ -54,7 +53,12 @@ body > div {
 .w150 {
 	width: 150px;
 }
-.h
+.w100_ {
+	width: 100%;
+}
+.h-fit {
+	height: fit-content;
+}
 .gap2 {
 	gap: 2px;
 }
@@ -88,9 +92,15 @@ body > div {
 .flex1 {
 	flex: 1;
 }
+.flex2 {
+	flex: 2;
+}
 .flex-row {
 	display: flex;
 	flex-direction: row;
+}
+.flex-wrap {
+  flex-flow: wrap;
 }
 .flex-column {
 	display: flex;
@@ -116,6 +126,9 @@ body > div {
 .pre {
 	word-break: break-word;
 	white-space: break-spaces;
+}
+.hide-next[type="checkbox"]:not(:checked) + .hide-this {
+	display: none;
 }
 .hidden {
 	display: none;

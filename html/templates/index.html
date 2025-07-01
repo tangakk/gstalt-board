@@ -22,8 +22,8 @@
 								<form class="space border shadow flex-column gap5 pad10" action="/api/edit-profile">
 									<p>Никнейм</p>
 									<input class="field" name="Name">
-									<label for="change-avatar" class="button border shadow pad2 text-center">Выбрать Аватар</label>
-									<input id="change-avatar" class="hidden" type="file" name="file">
+									<label for="user-change-img" class="button border shadow pad2 text-center">Выбрать Аватар</label>
+									<input id="user-change-img" class="hidden" type="file" name="file">
 									<input class="button" type="submit" value="Ввод">
 								</form>
 							</details>
@@ -62,15 +62,29 @@
 				<div class="flex-row gap10">
 					<details>
 						<summary class="button text-center w150 flex-column">Редактировать</summary>
-						<form class="space border shadow flex-column gap5 pad10" action="/api/edit-profile">
-							<p>Никнейм</p>
-							<input class="field" name="Name">
-							<label for="change-avatar" class="button border shadow pad2 text-center">Выбрать Аватар</label>
-							<input id="change-avatar" class="hidden" type="file" name="file">
+						<form class="space border shadow flex-column gap10 pad10" action="/api/edit-profile">
+							<div class="flex-row gap10">
+								<p class="flex1">Наименование</p>
+								<input class="flex1 field" name="Name">
+							</div>
+							<div class="flex-row gap10">
+								<p class="flex1">Описание</p>
+								<input class="flex1 field" name="Description">
+							</div>
+							<label for="board-change-img" class="button border shadow pad2 text-center">Выбрать Изображение</label>
+							<input id="board-change-img" class="hidden" type="file" name="file">
+							<div class="flex-row flex-wrap gap10">
+								<p>Приват</p>
+								<input type="checkbox" class="field hide-next" name="Private">
+								<div class="flex-column gap5 hide-this w100_">
+									<p>Пользователи привата</p>
+									<input class="field" name="AllowUsers">
+								</div>
+							</div>
 							<input class="button" type="submit" value="Ввод">
 						</form>
 					</details>
-					<div class="button text-center w150">Удалить</div>
+					<div class="button h-fit text-center w150">Удалить</div>
 				</div>
 				{{end}}
 			</div>
