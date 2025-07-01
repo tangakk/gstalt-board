@@ -16,14 +16,15 @@ body > div {
 .field {
 	background-color: #ffffff;
 	border: 1px solid;
-	box-shadow: 1px 2px;
+	box-shadow: 1px 1px;
 	user-select: none;
 	padding: 2px;
 }
 .button {
 	background-color: #ffffff;
 	border: 1px solid;
-	box-shadow: 1px 2px;
+	box-shadow: 1px 1px;
+	height: fit-content;
 	user-select: none;
 	padding: 2px;
 }
@@ -32,21 +33,18 @@ body > div {
 }
 .button:active {
 	box-shadow: 0px 0px;
-	transform: translate(1px, 2px);
+	transform: translate(1px, 1px);
 }
 
 .border {
 	border: 1px solid;
 }
 .border.shadow {
-	box-shadow: 1px 2px;
+	box-shadow: 1px 1px;
 }
 
 .flex-span-all > * {
 	flex: 1;
-}
-.flex-span { /* class="flex-span" style="--flex-span: 1;" */
-	flex: var(--flex-span);
 }
 
 .center.div {
@@ -74,28 +72,15 @@ body > div {
 .hide-next[type="checkbox"]:not(:checked) ~ .hide-this {
 	display: none;
 }
+.hide-next[type="checkbox"]:checked ~ .unhide-this {
+	display: none;
+}
 
 .img { /* class="img" style="--img-size: 100px;" */
 	width: var(--img-size);
 	height: var(--img-size);
 }
 
-.height { /* class="height" style="--height: 100px;" */
-	height: var(--height);
-}
-.width { /* class="width" style="--width: 100px;" */
-	width: var(--width);
-}
-
-.gap { /* class="gap" style="--gap: 100px;" */
-	gap: var(--gap);
-}
-.margin { /* class="margin" style="--margin: 100px;" */
-	margin: var(--margin);
-}
-.padding { /* class="padding" style="--padding: 100px;" */
-	padding: var(--padding);
-}
 .pre {
 	word-break: break-word;
 	white-space: break-spaces;
