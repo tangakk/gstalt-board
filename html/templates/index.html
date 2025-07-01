@@ -9,12 +9,12 @@
 		<div class="flex-row padding flex-span-all" style="--padding: 20px;">
 			<div></div>
 			<div class="center div text"><h1>Гештальч!</h1></div>
-			<div class="flex-row flex-span-all">
-				<div></div>
+			<div>
 				{{if .IsRegistered}}
-				<div class="width flex-span" style="--width: 250px; --flex-span: 2;">
-					<fieldset class="flex-row gap padding" style="--gap: 10px; --padding: 10px;">
-						<legend>| Авторизован |</legend>
+				<div>
+					<fieldset class="width flex-row gap margin padding"
+					style="--width: 0; --gap: 10px; --margin: auto; --padding: 10px;">
+						<legend class="margin" style="--margin: auto;">| Авторизован |</legend>
 						<div class="center text width flex-column gap margin" style="--width: 150px; --gap: 5px; --margin: 0 auto;">
 							<p>{{.Username}}</p>
 							<label for="user-edit" class="button">Редактировать</label>
@@ -22,8 +22,10 @@
 							<form class="border shadow flex-column hide-this gap margin padding"
 							style="--gap: 5px; --margin: 5px; --padding: 10px;"
 							action="/api/edit-profile">
-								<p>Никнейм</p>
-								<input class="field" name="Name">
+								<p style="text-decoration: line-through;">Новый никнейм</p>
+								<input class="field" name="Name" disabled>
+								<p>Новый пароль</p>
+								<input class="field" name="Pass">
 								<label for="user-change-img"
 								class="center text button border shadow padding"
 								style="--padding: 2px;">Выбрать Аватар</label>
@@ -36,9 +38,10 @@
 					</fieldset>
 				</div>
 				{{else}}
-				<form class="width flex-span" style="--width: 200px; --flex-span: 2;" action="/api/login">
-					<fieldset class="flex-row gap padding" style="--gap: 10px; --padding: 10px;">
-						<legend>| Вход / Регистрация |</legend>
+				<form action="/api/login">
+					<fieldset class="width flex-row gap margin padding"
+					style="--width: 0; --gap: 10px; --margin: auto; --padding: 10px;">
+						<legend class="margin" style="--margin: auto;">| Неавторизован |</legend>
 						<div class="center text width flex-column gap margin" style="--width: 150px; --gap: 5px; --margin: 0 auto;">
 							<p>Логин</p>
 							<input class="field" name="Name">
@@ -93,6 +96,5 @@
 			</div>
 			{{end}}
 		</div>
-		<div></div>
     </body>
 </html>
