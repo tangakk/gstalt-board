@@ -2,14 +2,14 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Гештальч!</title>
+        <title>{{.Title}}</title>
 		<link rel="stylesheet" href="/internal/style.css">
 		<link rel="stylesheet" href="style.css">
     </head>
     <body>
 		<div class="flex-row flex-span-all" style="padding: 20px;">
 			<div></div>
-			<div class="center div text"><h1>Гештальч!</h1></div>
+			<div class="center div text"><h1>{{.Title}}</h1></div>
 			<div>
 				{{if .IsRegistered}}
 				<div>
@@ -55,50 +55,48 @@
 				{{end}}
 			</div>
 		</div>
-		<div>
+		<div style="gap: 20px;">
 			{{range .Boards}}
-			<div class="center div flex-column" style="width: 1000px; gap: 20px;">
-				<div class="flex-column" style="gap: 5px;">
-					<a href="{{.Path}}" class="button flex-row" style="gap: 10px; padding: 10px;">
-						<img class="img" style="--img-size: 60px;" src="{{.Image}}">
-						<div class="">
-							<h2>{{.Name}}</h2>
-							<h3 class="pre">{{.Desc}}</h3>
-						</div>
-					</a>
-					{{if .IsSuperadmin}}
-					<div class="flex-row" style="gap: 10px;">
-						<div class="flex-column" style="gap: 5px;">
-							<label for="board-edit" class="button center text" style="width: 200px;">Редактировать</label>
-							<input id="board-edit" type="checkbox" class="hidden hide-next">
-							<form class="border shadow flex-column hide-this" style="gap: 10px; padding: 5px;" action="/api/edit-profile">
-								<div class="center div text" style="width: 90%;">
-									<p>Наименование</p>
-									<input class="field" name="Name">
-								</div>
-								<div class="center div text" style="width: 90%;">
-									<p>Описание</p>
-									<input class="field" name="Description">
-								</div>
-								<label for="board-change-img" class="center div text button border shadow" style="width: 90%;">Выбрать Изображение</label>
-								<input id="board-change-img" class="hidden" type="file" name="file">
-								<label for="private-checkbox" class="button center div text" style="width: 90%;">Приват</label>
-								<input id="private-checkbox" type="checkbox" class="hidden hide-next" name="Private">
-								<div class="center div text flex-column hide-this" style="width: 90%;">
-									<p>Приват включен</p>
-									<p>Пользователи привата</p>
-									<input class="field" name="AllowUsers">
-								</div>
-								<div class="center div text flex-column unhide-this" style="width: 90%;">
-									<p>Приват отключен</p>
-								</div>
-								<input class="center div text button" style="width: 90%;" type="submit" value="Применить">
-							</form>
-						</div>
-						<div class="button center text" style="width: 150px;">Удалить</div>
+			<div class="center div flex-column" style="width: 1000px; gap: 5px;">
+				<a href="{{.Path}}" class="button flex-row" style="gap: 10px; padding: 10px;">
+					<img class="img" style="--img-size: 60px;" src="{{.Image}}">
+					<div class="">
+						<h2>{{.Name}}</h2>
+						<h3 class="pre">{{.Desc}}</h3>
 					</div>
-					{{end}}
+				</a>
+				{{if .IsSuperadmin}}
+				<div class="flex-row" style="gap: 10px;">
+					<div class="flex-column" style="gap: 5px;">
+						<label for="board-edit" class="button center text" style="width: 200px;">Редактировать</label>
+						<input id="board-edit" type="checkbox" class="hidden hide-next">
+						<form class="border shadow flex-column hide-this" style="gap: 10px; padding: 5px;" action="/api/edit-profile">
+							<div class="center div text" style="width: 90%;">
+								<p>Наименование</p>
+								<input class="field" name="Name">
+							</div>
+							<div class="center div text" style="width: 90%;">
+								<p>Описание</p>
+								<input class="field" name="Description">
+							</div>
+							<label for="board-change-img" class="center div text button border shadow" style="width: 90%;">Выбрать Изображение</label>
+							<input id="board-change-img" class="hidden" type="file" name="file">
+							<label for="private-checkbox" class="button center div text" style="width: 90%;">Приват</label>
+							<input id="private-checkbox" type="checkbox" class="hidden hide-next" name="Private">
+							<div class="center div text flex-column hide-this" style="width: 90%;">
+								<p>Приват включен</p>
+								<p>Пользователи привата</p>
+								<input class="field" name="AllowUsers">
+							</div>
+							<div class="center div text flex-column unhide-this" style="width: 90%;">
+								<p>Приват отключен</p>
+							</div>
+							<input class="center div text button" style="width: 90%;" type="submit" value="Применить">
+						</form>
+					</div>
+					<div class="button center text" style="width: 150px;">Удалить</div>
 				</div>
+				{{end}}
 			</div>
 			{{end}}
 		</div>

@@ -80,7 +80,14 @@ body > div {
 	width: var(--img-size);
 	height: var(--img-size);
 }
-
+.link {
+	color: blue;
+	text-decoration: underline;
+}
+.link:visited {
+	color: blueviolet;
+	text-decoration: underline;
+}
 .pre {
 	word-break: break-word;
 	white-space: break-spaces;
@@ -97,6 +104,10 @@ h2 {
 }
 h3 {
 	font-size: 1.5em;
+	font-weight: normal;
+}
+p {
+	font-size: 1em;
 	font-weight: normal;
 }
 a {
