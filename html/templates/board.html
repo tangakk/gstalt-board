@@ -6,7 +6,7 @@
 		<link rel="stylesheet" href="/internal/style.css">
 		<link rel="stylesheet" href="style.css">
     </head>
-    <body>
+    <body class="flex-column flex-span-all">
 		<div class="flex-row flex-span-all" style="padding: 20px;">
 			<div></div>
 			<div class="center div text flex-column" style="gap: 20px;">
@@ -58,9 +58,9 @@
 				{{end}}
 			</div>
 		</div>
-		<div style="overflow-y: scroll; gap: 20px;">
+		<div class="border" style="overflow-y: scroll; flex-direction: column-reverse; flex: 4; gap: 20px;">
 			{{range .Posts}}
-			<div class="center div flex-column" style="width: 1000px; gap: 5px;">
+			<div class="center div flex-column" style="width: 1000px; gap: 5px; margin: 0 auto 0;">
 				<div class="border shadow flex-row" style="gap: 10px; padding: 10px;">
 					<div class="center text">
 						<img class="img" style="--img-size: 80px;" src="/images/nopic.jpeg">
@@ -76,26 +76,27 @@
 					</a>
 					{{end}}
 				</div>
-				{{if .canDelete}}
-				<div class="button center text" style="width: 100px;">Удалить</div>
-				{{end}}
+				<div class="flex-row" style="gap: 10px;">
+					<div class="button center text" style="width: 100px;">Ответы</div>
+					{{if .canDelete}}
+					<div class="button center text" style="width: 100px;">Удалить</div>
+					{{end}}
+				</div>
 			</div>
 			{{end}}
 		</div>
-		<form class="" action="/api/post/post" method="post" enctype="multipart/form-data" target="responce">
-			<div>
-				<label for="author">Автор</label>
-				<input type="text" id="author" name="Author">
-			<label for="data">Картинка</label><input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif"></div>
-			<div class="grow-4">
-				<label for="text">Текст</label>
-				<textarea id="text" name="Text" style="height: 6em;resize: none;"></textarea>
-			</div>
-			<div>
+		<div>
+			<form class="center div flex-row flex-span-all" style="width: 1000px; gap: 5px; margin: 10px auto 20px;" action="/api/post/post" method="post" enctype="multipart/form-data" target="responce">
+				<div class="flex-column" style="flex: 4; gap: 10px;">
+					<textarea name="Text" class="field" style="height: 6em; resize: none;"></textarea>
+					<input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif">
+				</div>
+				<div class="flex-column" style="gap: 10px;">
+					<button class="button" type="submit">Отправить</button>
+					<button class="button" type="reset">Сброс</button>
+				</div>
 				<input id="form-board" type="hidden" name="Board" value="/test">
-				<iframe class="hidden" name="responce"></iframe>
-				<button class="center button" type="submit" style="height: 50px;width: 100px;margin: auto;">Отправить</button>
-			</div>
-		</form>
+			</form>
+		</div>
     </body>
 </html>

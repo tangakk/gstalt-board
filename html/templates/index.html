@@ -6,7 +6,7 @@
 		<link rel="stylesheet" href="/internal/style.css">
 		<link rel="stylesheet" href="style.css">
     </head>
-    <body>
+    <body class="flex-column flex-span-all">
 		<div class="flex-row flex-span-all" style="padding: 20px;">
 			<div></div>
 			<div class="center div text"><h1>{{.Title}}</h1></div>
@@ -55,9 +55,9 @@
 				{{end}}
 			</div>
 		</div>
-		<div style="gap: 20px;">
+		<div class="border" style="overflow-y: scroll; flex: 4; gap: 20px;">
 			{{range .Boards}}
-			<div class="center div flex-column" style="width: 1000px; gap: 5px;">
+			<div class="center div flex-column" style="width: 1000px; gap: 5px; margin: 0 auto;">
 				<a href="{{.Path}}" class="button flex-row" style="gap: 10px; padding: 10px;">
 					<img class="img" style="--img-size: 60px;" src="{{.Image}}">
 					<div class="">

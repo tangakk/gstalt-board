@@ -93,7 +93,7 @@ body > div {
 	white-space: break-spaces;
 }
 
-input {
+input, textarea {
 	outline: none;
 }
 h1 {
