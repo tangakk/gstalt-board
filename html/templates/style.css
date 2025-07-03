@@ -1,116 +1,116 @@
+* {
+	font-family: monospace;
+	font-size: 1em;
+	margin: 0;
+	padding: 0;
+}
 body {
-		font-family: sans-serif;
-		width: 1000px;
-		height: 100vh;
-		margin: auto;
-	}
-	body > div {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-	body > div > * {
-		margin: 20px;
-	}
-	div.center {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: 20px;
-	}
-	.center {
-		margin: auto;
-	}
-	.border {
-		border: 1px solid;
-	}
-	.title {
-		margin: 20px auto;
-	}
-	.result {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-		overflow-y: auto;
-		gap: 20px;
-		margin: 0;
-	}
-	.result.reverse {
-		flex-direction: column-reverse;
-	}
-	.message {
-		display: flex;
-		flex-direction: row;
-		gap: 20px;
-		padding: 10px;
-	}
-	.message img {
-		height: 60px;
-		width: 60px;
-	}
-	.message > div {
-		word-break: break-word;
-		flex-grow: 1;
-		width: min-content;
-	}
-	.message .row {
-		display: flex;
-		flex-direction: row;
-		gap: 50px;
-	}
-	.button {
-		border: 1px solid;
-		box-shadow: 2px 4px;
-		padding: 2px;
-	}
-	.button:active {
-		box-shadow: 0px 0px;
-		transform: translate(2px, 4px);
-	}
-	.input {
-		display: flex;
-		flex-direction: row;
-		width: 80%;
-		gap: 10px;
-		margin: 20px auto;
-	}
-	.input > div {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	}
-	.input > .grow-4 {
-		flex-grow: 4;
-	}
-	.input > .grow-4 > textarea {
-		font-size: 14px;
-		height: 70px;
-	}
-	.hidden {
-		display: none;
-	}
-	a {
-		font-size: 16px;
-		color: #000;
-	}
-	h1 {
-		font-size: 36px;
-		margin: 0;
-	}
-	h2 {
-		font-size: 24px;
-		margin: 0;
-	}
-	h3 {
-		font-size: 18px;
-		margin: 0;
-	}
-	h4 {
-		font-size: 16px;
-		margin: 0;
-	}
-	p {
-		white-space: pre-wrap;
-		font-size: 16px;
-		margin: 0;
-	}
+	height: 100vh;
+	margin: auto;
+}
+body > div {
+	display: flex;
+	flex-direction: column;
+}
+
+.field {
+	background-color: #ffffff;
+	border: 1px solid;
+	box-shadow: 1px 1px;
+	user-select: none;
+	padding: 2px;
+}
+.button {
+	background-color: #ffffff;
+	border: 1px solid;
+	box-shadow: 1px 1px;
+	height: fit-content;
+	user-select: none;
+	padding: 2px;
+}
+.button:hover {
+	background-color: #e6e6e6;
+}
+.button:active {
+	box-shadow: 0px 0px;
+	transform: translate(1px, 1px);
+}
+
+.border {
+	border: 1px solid;
+}
+.border.shadow {
+	box-shadow: 1px 1px;
+}
+
+.flex-span-all > * {
+	flex: 1;
+}
+
+.center.div {
+	margin: auto;
+}
+.center.text {
+	text-align: center;
+}
+.center.justify {
+	justify-content: center;
+}
+
+.flex-column {
+	display: flex;
+	flex-direction: column;
+}
+.flex-row {
+	display: flex;
+	flex-direction: row;
+}
+
+.hidden {
+	display: none;
+}
+.hide-next[type="checkbox"]:not(:checked) ~ .hide-this {
+	display: none;
+}
+.hide-next[type="checkbox"]:checked ~ .unhide-this {
+	display: none;
+}
+
+.img { /* class="img" style="--img-size: 100px;" */
+	width: var(--img-size);
+	height: var(--img-size);
+}
+.link {
+	color: blue;
+	text-decoration: underline;
+}
+.link:visited {
+	color: blueviolet;
+	text-decoration: underline;
+}
+.pre {
+	word-break: break-word;
+	white-space: break-spaces;
+}
+
+input, textarea {
+	outline: none;
+}
+h1 {
+	font-size: 3em;
+}
+h2 {
+	font-size: 2em;
+}
+h3 {
+	font-size: 1.5em;
+	font-weight: normal;
+}
+p {
+	font-size: 1em;
+	font-weight: normal;
+}
+a {
+	color: black;
+	text-decoration: none;
+}

@@ -2,25 +2,103 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Гештальт</title>
+        <title>{{.Title}}</title>
 		<link rel="stylesheet" href="/internal/style.css">
-		<script src="/internal/script.js"></script>
-		<noscript>
-			<meta http-equiv="refresh" content="0; url=/old">
-		</noscript>
+		<link rel="stylesheet" href="style.css">
     </head>
-    <body>
-		<div>
-			<div class="center title"><h1>Гештальт Борда</h1></div>
-			<div id="result" class="result">
-				<a class="border message">
-					<img class="board-img" src="/images/nopic.jpeg">
-					<div>
-						<h2 class="board-name">/...</h2>
-						<h3 class="board-desc">...</h3>
+    <body class="flex-column flex-span-all">
+		<div class="flex-row flex-span-all" style="padding: 20px;">
+			<div></div>
+			<div class="center div text"><h1>{{.Title}}</h1></div>
+			<div>
+				{{if .IsRegistered}}
+				<div>
+					<fieldset class="flex-row"
+					style="width: 0; gap: 10px; margin: auto; padding: 10px;">
+						<legend style="margin: auto;">| Авторизован |</legend>
+						<div class="center text flex-column" style="width: 150px; gap: 5px; margin: 0 auto;">
+							<p>{{.Username}}</p>
+							<label for="user-edit" class="button">Редактировать</label>
+							<input id="user-edit" type="checkbox" class="hidden hide-next">
+							<form class="border shadow flex-column hide-this"
+							style="gap: 5px; margin: 5px; padding: 10px;"
+							action="/api/edit-profile">
+								<p style="text-decoration: line-through;">Новый никнейм</p>
+								<input class="field" name="Name" disabled>
+								<p>Новый пароль</p>
+								<input class="field" name="Pass">
+								<label for="user-change-img"
+								class="center text button border shadow"
+								style="padding: 2px;">Выбрать Аватар</label>
+								<input id="user-change-img" class="hidden" type="file" name="file">
+								<input class="button" type="submit" value="Ввод">
+							</form>
+							<a class="button" href="/api/logout">Выйти</a>
+						</div>
+						<img class="img" style="--img-size: 80px; margin: 0 auto;" src="{{.Avatar}}">
+					</fieldset>
+				</div>
+				{{else}}
+				<form action="/api/login">
+					<fieldset class="flex-row"
+					style="width: 0; gap: 10px; margin: auto; padding: 10px;">
+						<legend style="margin: auto;">| Неавторизован |</legend>
+						<div class="center text flex-column" style="width: 150px; gap: 5px; margin: 0 auto;">
+							<p>Логин</p>
+							<input class="field" name="Name">
+							<p>Пароль</p>
+							<input class="field" type="password" name="Pass">
+							<input class="button" type="submit" value="Ввод">
+						</div>
+					</fieldset>
+				</form>
+				{{end}}
+			</div>
+		</div>
+		<div class="border" style="overflow-y: scroll; flex: 4; gap: 20px;">
+			{{range .Boards}}
+			<div class="center div flex-column" style="width: 1000px; gap: 5px; margin: 0 auto;">
+				<a href="{{.Path}}" class="button flex-row" style="gap: 10px; padding: 10px;">
+					<img class="img" style="--img-size: 60px;" src="{{.Image}}">
+					<div class="">
+						<h2>{{.Name}}</h2>
+						<h3 class="pre">{{.Desc}}</h3>
 					</div>
 				</a>
+				{{if .IsSuperadmin}}
+				<div class="flex-row" style="gap: 10px;">
+					<div class="flex-column" style="gap: 5px;">
+						<label for="board-edit" class="button center text" style="width: 200px;">Редактировать</label>
+						<input id="board-edit" type="checkbox" class="hidden hide-next">
+						<form class="border shadow flex-column hide-this" style="gap: 10px; padding: 5px;" action="/api/edit-profile">
+							<div class="center div text" style="width: 90%;">
+								<p>Наименование</p>
+								<input class="field" name="Name">
+							</div>
+							<div class="center div text" style="width: 90%;">
+								<p>Описание</p>
+								<input class="field" name="Description">
+							</div>
+							<label for="board-change-img" class="center div text button border shadow" style="width: 90%;">Выбрать Изображение</label>
+							<input id="board-change-img" class="hidden" type="file" name="file">
+							<label for="private-checkbox" class="button center div text" style="width: 90%;">Приват</label>
+							<input id="private-checkbox" type="checkbox" class="hidden hide-next" name="Private">
+							<div class="center div text flex-column hide-this" style="width: 90%;">
+								<p>Приват включен</p>
+								<p>Пользователи привата</p>
+								<input class="field" name="AllowUsers">
+							</div>
+							<div class="center div text flex-column unhide-this" style="width: 90%;">
+								<p>Приват отключен</p>
+							</div>
+							<input class="center div text button" style="width: 90%;" type="submit" value="Применить">
+						</form>
+					</div>
+					<div class="button center text" style="width: 150px;">Удалить</div>
+				</div>
+				{{end}}
 			</div>
+			{{end}}
 		</div>
     </body>
 </html>

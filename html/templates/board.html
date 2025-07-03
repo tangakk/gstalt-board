@@ -2,47 +2,100 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Гештальт</title>
+        <title>{{.Title}}</title>
 		<link rel="stylesheet" href="/internal/style.css">
-		<script src="/internal/script.js"></script>
-		<noscript>
-			<meta http-equiv="refresh" content="0; url=/old">
-		</noscript>
+		<link rel="stylesheet" href="style.css">
     </head>
-    <body>
-		<div>
-			<div class="center title">
-			<a href="/">На главную страницу</a>
-			<h1 class="center" id="board-title">/...</h1>
+    <body class="flex-column flex-span-all">
+		<div class="flex-row flex-span-all" style="padding: 20px;">
+			<div></div>
+			<div class="center div text flex-column" style="gap: 20px;">
+				<a class="center div button" style="width: 250px; font-size: 1.5em; padding: 4px;" href="/">На главную страницу</a>
+				<h1>{{.Title}}</h1>
 			</div>
-			<div id="result" class="result reverse">
-				<div class="border message">
-					<img class="post-avatar" src="/images/nopic.jpeg">
-					<div>
-						<div class="row">
-							<h4 class="post-id">#0</h4>
-							<h4 class="post-author">...</h4>
-							<h4 class="post-time">00:00</h4>
-							<a class="post-reply" href="">Ответить</a>
+			<div>
+				{{if .IsRegistered}}
+				<div>
+					<fieldset class="flex-row"
+					style="width: 0; gap: 10px; margin: auto; padding: 10px;">
+						<legend style="margin: auto;">| Авторизован |</legend>
+						<div class="center text flex-column" style="width: 150px; gap: 5px; margin: 0 auto;">
+							<p>{{.Username}}</p>
+							<label for="user-edit" class="button">Редактировать</label>
+							<input id="user-edit" type="checkbox" class="hidden hide-next">
+							<form class="border shadow flex-column hide-this"
+							style="gap: 5px; margin: 5px; padding: 10px;"
+							action="/api/edit-profile">
+								<p style="text-decoration: line-through;">Новый никнейм</p>
+								<input class="field" name="Name" disabled>
+								<p>Новый пароль</p>
+								<input class="field" name="Pass">
+								<label for="user-change-img"
+								class="center text button border shadow"
+								style="padding: 2px;">Выбрать Аватар</label>
+								<input id="user-change-img" class="hidden" type="file" name="file">
+								<input class="button" type="submit" value="Ввод">
+							</form>
+							<a class="button" href="/api/logout">Выйти</a>
 						</div>
-						<p class="post-text">...</p>
+						<img class="img" style="--img-size: 80px; margin: 0 auto;" src="{{.Avatar}}">
+					</fieldset>
+				</div>
+				{{else}}
+				<form action="/api/login">
+					<fieldset class="flex-row"
+					style="width: 0; gap: 10px; margin: auto; padding: 10px;">
+						<legend style="margin: auto;">| Неавторизован |</legend>
+						<div class="center text flex-column" style="width: 150px; gap: 5px; margin: 0 auto;">
+							<p>Логин</p>
+							<input class="field" name="Name">
+							<p>Пароль</p>
+							<input class="field" type="password" name="Pass">
+							<input class="button" type="submit" value="Ввод">
+						</div>
+					</fieldset>
+				</form>
+				{{end}}
+			</div>
+		</div>
+		<div class="border" style="overflow-y: scroll; flex-direction: column-reverse; flex: 4; gap: 20px;">
+			{{range .Posts}}
+			<div class="center div flex-column" style="width: 1000px; gap: 5px; margin: 0 auto 0;">
+				<div class="border shadow flex-row" style="gap: 10px; padding: 10px;">
+					<div class="center text">
+						<img class="img" style="--img-size: 80px;" src="/images/nopic.jpeg">
+						<p>{{.PostId}}</p>
+						<p>{{.Author}}</p>
+						<p>{{.Time}}</p>
+						<a class="link" href="{{.replyLink}}">Ответить</a>
 					</div>
+					<h3 class="pre">{{.Text}}</h3>
+					{{if .Image}}
+					<a style="margin: 0 0 0 auto;" href="{{.Image}}">
+						<img class="img" style="--img-size: 200px;" src="{{.Image}}">
+					</a>
+					{{end}}
+				</div>
+				<div class="flex-row" style="gap: 10px;">
+					<div class="button center text" style="width: 100px;">Ответы</div>
+					{{if .canDelete}}
+					<div class="button center text" style="width: 100px;">Удалить</div>
+					{{end}}
 				</div>
 			</div>
-			<form class="input" action="/api/post/post" method="post" enctype="multipart/form-data" target="responce">
-				<div>
-					<label for="author">Автор</label>
-					<input type="text" id="author" name="Author">
-				<label for="data">Картинка</label><input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif"></div>
-				<div class="grow-4">
-					<label for="text">Текст</label>
-					<textarea id="text" name="Text" style="height: 6em;resize: none;"></textarea>
+			{{end}}
+		</div>
+		<div>
+			<form class="center div flex-row flex-span-all" style="width: 1000px; gap: 5px; margin: 10px auto 20px;" action="/api/post/post" method="post" enctype="multipart/form-data" target="responce">
+				<div class="flex-column" style="flex: 4; gap: 10px;">
+					<textarea name="Text" class="field" style="height: 6em; resize: none;"></textarea>
+					<input type="file" name="Data" id="data" accept="image/jpeg;image/png;image/gif">
 				</div>
-				<div>
-					<input id="form-board" type="hidden" name="Board" value="/test">
-					<iframe class="hidden" name="responce"></iframe>
-					<button class="center button" type="submit" style="height: 50px;width: 100px;margin: auto;">Отправить</button>
+				<div class="flex-column" style="gap: 10px;">
+					<button class="button" type="submit">Отправить</button>
+					<button class="button" type="reset">Сброс</button>
 				</div>
+				<input id="form-board" type="hidden" name="Board" value="/test">
 			</form>
 		</div>
     </body>
