@@ -58,11 +58,11 @@
 		<div class="border" style="overflow-y: scroll; flex: 4; gap: 20px;">
 			{{range .Boards}}
 			<div class="center div flex-column" style="width: 1000px; gap: 5px; margin: 0 auto;">
-				<a href="{{.Path}}" class="button flex-row" style="gap: 10px; padding: 10px;">
+				<a href="{{.Name}}" class="button flex-row" style="gap: 10px; padding: 10px;">
 					<img class="img" style="--img-size: 60px;" src="{{.Image}}">
 					<div class="">
 						<h2>{{.Name}}</h2>
-						<h3 class="pre">{{.Desc}}</h3>
+						<h3 class="pre">{{.Description}}</h3>
 					</div>
 				</a>
 				{{if .IsSuperadmin}}

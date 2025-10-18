@@ -62,8 +62,10 @@ func NewPageRenderer(pr *repo.Repo, cfg PagerendererConfig) *PageRenderer {
 
 	r.Use(ValidateUser)
 
-	r.Get("/", renderFile("html/templates/index.html"))
-	r.Get("/{board}", renderFile("html/templates/board.html"))
+	//r.Get("/", renderFile("html/templates/index.html"))
+	r.Get("/", a.NewMainPage)
+	//r.Get("/{board}", renderFile("html/templates/board.html"))
+	r.Get("/{board}", a.NewBoardPage)
 	r.Get("/{board}/{post}", renderFile("html/templates/post.html"))
 
 	r.Route("/old", func(r chi.Router) {

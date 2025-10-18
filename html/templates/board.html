@@ -64,21 +64,21 @@
 				<div class="border shadow flex-row" style="gap: 10px; padding: 10px;">
 					<div class="center text">
 						<img class="img" style="--img-size: 80px;" src="/images/nopic.jpeg">
-						<p>{{.PostId}}</p>
+						<p>{{.Id}}</p>
 						<p>{{.Author}}</p>
-						<p>{{.Time}}</p>
-						<a class="link" href="{{.replyLink}}">Ответить</a>
+						<p>{{.Timestamp}}</p>
+						<a class="link" href="">Ответить</a>
 					</div>
 					<h3 class="pre">{{.Text}}</h3>
-					{{if .Image}}
-					<a style="margin: 0 0 0 auto;" href="{{.Image}}">
-						<img class="img" style="--img-size: 200px;" src="{{.Image}}">
+					{{if .Data}}
+					<a style="margin: 0 0 0 auto;" href="{{.Data}}">
+						<img class="img" style="--img-size: 200px;" src="{{.Data}}">
 					</a>
 					{{end}}
 				</div>
 				<div class="flex-row" style="gap: 10px;">
 					<div class="button center text" style="width: 100px;">Ответы</div>
-					{{if .canDelete}}
+					{{if .CanDelete}}
 					<div class="button center text" style="width: 100px;">Удалить</div>
 					{{end}}
 				</div>
@@ -95,7 +95,7 @@
 					<button class="button" type="submit">Отправить</button>
 					<button class="button" type="reset">Сброс</button>
 				</div>
-				<input id="form-board" type="hidden" name="Board" value="/test">
+				<input id="form-board" type="hidden" name="Board" value="{{.Title}}">
 			</form>
 		</div>
     </body>

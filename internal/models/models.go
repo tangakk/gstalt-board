@@ -32,4 +32,5 @@ type Board struct {
 	Owner                   string
 	PostsCount              int64
 	PostsCountWithResponses int64
+	Image                   string
 }
