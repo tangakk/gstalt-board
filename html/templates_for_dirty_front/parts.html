@@ -27,7 +27,8 @@
 
 {{define "posts_list"}}
 {{ range $key, $post := .Posts }}
-        <div style="border-width: 2px; border-style: solid; width: fit-content; overflow: hidden; min-width: 600px;
+        <div style="border-width: 2px; border-style: solid; width: fit-content; overflow: hidden; min-width: 600px; margin-right: 200px;
+        margin-left: 200px;
         {{if $post.ParentId}}
         background-color: #2fbeed;
         {{end}}" id="{{$post.Id}}">
@@ -53,7 +54,7 @@
 {{end}}
 
 {{define "response"}}
-<div style="border-width: 2px; border-style: solid; background-color: #2fbeed; margin-left: 100px; width: fit-content; overflow: hidden;"
+<div style="border-width: 2px; border-style: solid; background-color: #2fbeed; margin-left: 300px; width: fit-content; overflow: hidden;"
 id="{{.Id}}">
             {{template "head" .}}
             {{template "file" .}}
